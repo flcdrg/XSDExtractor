@@ -52,6 +52,13 @@ namespace JFDI.Utils.XSDExtractor.Parsers.Validators
             {
                 var pFacet = new XmlSchemaPatternFacet { Value = sva.InvalidCharacters };
                 // TODO: convert this to a regex that excludes the characters
+                pFacet.Value = string.Format(
+                    "[^{0}]*",
+                    pFacet.Value
+                        .Replace(@"\", @"\\")
+                        .Replace(@"[", @"\[")
+                        .Replace(@"]", @"\]"));
+
                 restriction.Facets.Add(pFacet);
             }
 
