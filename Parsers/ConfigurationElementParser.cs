@@ -63,11 +63,18 @@ namespace JFDI.Utils.XSDExtractor.Parsers
 
                 Generator.ComplexMap.Add(property.PropertyType, ct);
                 Generator.Schema.Items.Add(ct);
+
+                //  get all properties from the configuration object
+                foreach (var pi in GetProperties<ConfigurationPropertyAttribute>(property.PropertyType))
+                {
+                    var parser = TypeParserFactory.GetParser(Generator, pi);
+                    parser.GenerateSchemaTypeObjects(pi, ct);
+                }
             }
 
             var element = new XmlSchemaElement
             {
-                Name = atts[0].Name,
+                Name = property.PropertyType.Name + "CT",
                 MinOccurs = atts[0].IsRequired ? 1 : 0,
                 SchemaTypeName = new XmlQualifiedName(XmlHelper.PrependNamespaceAlias(ct.Name))
             };
@@ -76,13 +83,6 @@ namespace JFDI.Utils.XSDExtractor.Parsers
 
             //  add the documentation
             AddAnnotation(property, element, atts[0]);
-
-            //  get all properties from the configuration object
-            foreach (var pi in GetProperties<ConfigurationPropertyAttribute>(property.PropertyType))
-            {
-                var parser = TypeParserFactory.GetParser(Generator, pi);
-                parser.GenerateSchemaTypeObjects(pi, ct);
-            }
         }
     }
 }
