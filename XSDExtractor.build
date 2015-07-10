@@ -1,0 +1,92 @@
+<project name="XSDExtractor" default="zip" xmlns="http://nant.sf.net/release/0.85-rc4/nant.xsd">
+  
+  <property name="tools.location" value="D:\Development\Tools" />
+  <property name="nmock.location" value="${tools.location}\\nmock-1.0\NMock.dll" />
+  <property name="nunit.location" value="C:\Program Files\NUnit-Net-2.0 2.2.8\bin\nunit.framework.dll" />
+
+  <property name="project.version" value="1.1.2" />
+  <property name="project.config" value="release" />
+  <property name="project.name" value="${project::get-name()}.exe" />
+
+  <echo message="Build started at ${datetime::now()}" />
+  <echo message="Config: ${project.config}" />
+  <echo message="Version: ${project.version}" />
+  <echo message="" />
+  <echo message="------ Library's ------"/>
+  <echo message="NMock: ${nmock.location}" />
+  <echo message="NUnit: ${nunit.location}" />
+
+  <target name="clean">
+    <delete dir="${build.dir}" />
+  </target>
+
+  <target name="debug">
+    <property name="project.config" value="debug" />
+    <property name="build.debug" value="true" />
+    <property name="basedir.suffix" value="debug" />
+  </target>
+
+  <target name="release">
+    <property name="project.config" value="release" />
+    <property name="build.debug" value="false" />
+    <property name="basedir.suffix" value="release" />
+  </target>
+
+  <target name="init">
+    <call target="${project.config}" />
+    <property name="build.dir" value="${project::get-base-directory()}/${project::get-name()}_${project.version}/${basedir.suffix}"/>
+    <call target="clean" />
+  </target>
+
+  <target name="build" description="compiles the source code" depends="init" verbose="true">
+    <mkdir dir="${build.dir}" />
+    <csc target="exe" output="${build.dir}/${project.name}" debug="${build.debug}">
+      <sources>
+        <include name="**/*.cs" />
+        <exclude name="XSDExtractor.UnitTests/**/*" />
+        <exclude name="MultiFileWatcher/**/*" />
+      </sources>
+    </csc>
+  </target>
+
+  <target name="tests" description="runs the unit tests against the unit tests project" depends="build">
+    <copy file="${nmock.location}" todir="${build.dir}" />
+    <csc target="library" output="${build.dir}/UnitTests.dll" debug="${build.debug}">
+      <sources>
+        <include name="XSDExtractor.UnitTests/**/*.cs" />
+      </sources>
+      <references basedir="${build.dir}">
+        <include name="${nunit.location}" />
+        <include name="${build.dir}/nmock.dll" />
+        <include name="${build.dir}/XSDExtractor.exe" />
+      </references>
+    </csc>
+    <nunit2>
+      <test assemblyname="${build.dir}/UnitTests.dll">
+        <assemblies basedir="${build.dir}" />
+      </test>
+      <formatter type="Plain" usefile="False" />
+    </nunit2>
+  </target>
+
+  <target name="zip" description="Zips up the exe and source as separate files ready for uploading to codeproject" depends="tests">
+    <zip zipfile="${build.dir}/XSDExtractor.zip">
+      <fileset basedir="${build.dir}" prefix="XSDExtractor">
+        <include name="XSDExtractor.exe" />
+      </fileset>
+      <fileset basedir="${project::get-base-directory()}" prefix="XSDExtractor">
+        <include name="readme.txt" />
+      </fileset>
+    </zip>
+
+    <zip zipfile="${build.dir}/Source.zip">
+      <fileset prefix="XSDExtractor">
+        <exclude name="**/bin/**/*" />
+        <exclude name="**/obj/**/*" />
+        <exclude name="${project::get-base-directory()}/${project::get-name()}_${project.version}/**/*" />
+        <include name="**/*" />
+      </fileset>
+    </zip>
+  </target>
+
+</project>

@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:tns="http://MultiFileWatcher" elementFormDefault="qualified" targetNamespace="http://MultiFileWatcher" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:complexType name="MultiWatcherConfigurationSectionCT">
+    <xs:all>
+      <xs:element minOccurs="1" name="files" type="tns:filesCT" />
+    </xs:all>
+  </xs:complexType>
+  <xs:element name="MultiWatcherConfigurationSection" type="tns:MultiWatcherConfigurationSectionCT" />
+  <xs:complexType name="filesCT">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="add" type="tns:FileElementCT" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="FileElementCT">
+    <xs:all />
+    <xs:attribute name="path" use="required">
+      <xs:simpleType>
+        <xs:restriction base="xs:string" />
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="notifyFilter" use="optional">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="FileName" />
+          <xs:enumeration value="DirectoryName" />
+          <xs:enumeration value="Attributes" />
+          <xs:enumeration value="Size" />
+          <xs:enumeration value="LastWrite" />
+          <xs:enumeration value="LastAccess" />
+          <xs:enumeration value="CreationTime" />
+          <xs:enumeration value="Security" />
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+  </xs:complexType>
+</xs:schema>

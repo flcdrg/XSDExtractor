@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{1FB9533E-1D23-4100-9BEB-BA3092C3DDAD}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>JFDI.Utils.XSDExtractor</RootNamespace>
+    <AssemblyName>XSDExtractor</AssemblyName>
+    <StartupObject>JFDI.Utils.XSDExtractor.Program</StartupObject>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>2.0</OldToolsVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <GenerateSerializationAssemblies>On</GenerateSerializationAssemblies>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Parsers\ConfigurationCollectionParser.cs" />
+    <Compile Include="Parsers\ConfigurationElementParser.cs" />
+    <Compile Include="ConfigurationSectionFinder.cs" />
+    <Compile Include="ConfigurationSectionFinderCoOrdinator.cs" />
+    <Compile Include="Parsers\DefaultConfigurationCollectionParser.cs" />
+    <Compile Include="Parsers\Validators\PositiveTimeSpanValidatorParser.cs" />
+    <Compile Include="Parsers\Validators\LongValidatorParser.cs" />
+    <Compile Include="Parsers\Validators\IntegerValidatorParser.cs" />
+    <Compile Include="Parsers\Validators\NoValidatorParser.cs" />
+    <Compile Include="Parsers\Validators\RegExValidatorParser.cs" />
+    <Compile Include="Parsers\Validators\StringValidatorParser.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Parsers\StandardTypeParser.cs" />
+    <Compile Include="Parsers\TypeParser.cs" />
+    <Compile Include="Parsers\TypeParserFactory.cs" />
+    <Compile Include="Parsers\Validators\ValidatorAttributeParser.cs" />
+    <Compile Include="Parsers\Validators\ValidatorFactory.cs" />
+    <Compile Include="XMLHelper.cs" />
+    <Compile Include="XSDGenerator.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
