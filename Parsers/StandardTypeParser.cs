@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #endregion
 
 using System.Configuration;
+using System.Linq;
 using System.Reflection;
 using System.Xml.Schema;
 
@@ -49,9 +50,15 @@ namespace JFDI.Utils.XSDExtractor.Parsers
                 return;
 
             //   don't include these in the xsd
-            string attName = atts[0].Name.ToLower();
+            var attName = atts[0].Name.ToLower();
             if (attName.StartsWith("xmlns") || attName.StartsWith("xsi:"))
                 return;
+
+            // avoid double entries
+            if (((XmlSchemaComplexType) type).Attributes.Cast<XmlSchemaObject>().Any(schemaAttrib => ((XmlSchemaAttribute) schemaAttrib).Name == atts[0].Name))
+            {
+                return;
+            }
 
             //  this should be a simple built in type, but if we can't 
             //  convert the type to an xs:type then we simply output the
