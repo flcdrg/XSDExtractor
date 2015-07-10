@@ -1,25 +1,25 @@
-using System;
-using System.Collections.Generic;
 using System.Text;
 using NUnit.Framework;
-using NMock;
 using System.Configuration;
 using System.Xml.Schema;
 using System.IO;
 using System.Xml;
 using JFDI.Utils.XSDExtractor.UnitTests.ConfigurationClasses;
 
-namespace JFDI.Utils.XSDExtractor.UnitTests {
+using NSubstitute;
 
-  [TestFixture(Description="Checks that extraction works correctly at the extremes of the design.")]
+namespace JFDI.Utils.XSDExtractor.UnitTests
+{
+
+    [TestFixture(Description="Checks that extraction works correctly at the extremes of the design.")]
   public class EdgeCases {
 
     [Test(Description="Checks that we can handle a ConfigurationSection object without any properties.")]
     public void TestBlankConfig() {
 
       //  build a standard configurationsection with properties (using the mock object)
-      DynamicMock dm = new DynamicMock(typeof(ConfigurationSection));
-      ConfigurationSection cs = (ConfigurationSection)dm.MockInstance;
+      var dm = Substitute.For<ConfigurationSection>();
+      ConfigurationSection cs = (ConfigurationSection)dm;
       XSDGenerator generator = new XSDGenerator(cs.GetType());
       XmlSchema schema = generator.GenerateXSD("UnitTestRootElement");
       string schemaXml = SchemaToString(schema);
