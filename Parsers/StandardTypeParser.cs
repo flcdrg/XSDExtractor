@@ -49,7 +49,8 @@ namespace JFDI.Utils.XSDExtractor.Parsers
                 return;
 
             //   don't include these in the xsd
-            if (atts[0].Name.ToLower() == "xmlns")
+            string attName = atts[0].Name.ToLower();
+            if (attName.StartsWith("xmlns") || attName.StartsWith("xsi:"))
                 return;
 
             //  this should be a simple built in type, but if we can't 
