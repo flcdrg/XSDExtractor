@@ -1,4 +1,5 @@
 #region License
+
 /*
 JFDI the .Net Job Framework (http://jfdi.sourceforge.net)
 Copyright (C) 2006  Steven Ward (steve.ward.uk@gmail.com)
@@ -17,45 +18,43 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
+
 #endregion
 
 using System;
 using System.Collections.Generic;
 
-namespace JFDI.Utils.XSDExtractor {
-
-  /// <summary>
-  /// 
-  /// </summary>
-  public class ConfigurationSectionFinderCoOrdinator {
-
-    string[] assemblies;
-    
+namespace JFDI.Utils.XSDExtractor
+{
     /// <summary>
-    /// 
     /// </summary>
-    public ConfigurationSectionFinderCoOrdinator(string[] assemblies) {
-      this.assemblies = assemblies;
+    public class ConfigurationSectionFinderCoOrdinator
+    {
+        private readonly string[] _assemblies;
+
+        /// <summary>
+        /// </summary>
+        public ConfigurationSectionFinderCoOrdinator(string[] assemblies)
+        {
+            _assemblies = assemblies;
+        }
+
+        /// <summary>
+        ///     Gets all the types that match the criteria in any of the assemblies
+        ///     listed in the array.
+        /// </summary>
+        public Type[] GetConfigSectionTypes(string className)
+        {
+            var retVal = new List<Type>();
+
+            foreach (var s in _assemblies)
+            {
+                var csf = new ConfigurationSectionFinder(s);
+                var types = csf.GetConfigSectionTypes(className);
+                retVal.AddRange(types);
+            }
+
+            return retVal.ToArray();
+        }
     }
-
-    /// <summary>
-    /// Gets all the types that match the criteria in any of the assemblies 
-    /// listed in the array.
-    /// </summary>
-    public Type[] GetConfigSectionTypes(string className) {
-
-      List<Type> retVal = new List<Type>();
-      
-      foreach (string s in assemblies) {
-        ConfigurationSectionFinder csf = new ConfigurationSectionFinder(s);
-        Type[] types = csf.GetConfigSectionTypes(className);
-        retVal.AddRange(types);
-      }
-
-      return retVal.ToArray();
-      
-    }
-    
-  }
-  
 }

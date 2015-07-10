@@ -1,4 +1,5 @@
 #region License
+
 /*
 JFDI the .Net Job Framework (http://jfdi.sourceforge.net)
 Copyright (C) 2006  Steven Ward (steve.ward.uk@gmail.com)
@@ -17,44 +18,40 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
+
 #endregion
 
 using System.Configuration;
 using System.Reflection;
 using System.Xml.Schema;
 
-namespace JFDI.Utils.XSDExtractor.Parsers.Validators {
-  
-  /// <summary>
-  /// 
-  /// </summary>
-  public class RegExValidatorParser : NoValidatorParser {
-
+namespace JFDI.Utils.XSDExtractor.Parsers.Validators
+{
     /// <summary>
-    /// 
     /// </summary>
-    public RegExValidatorParser(PropertyInfo property, ConfigurationValidatorAttribute attribute)
-      : base(property, attribute) {
+    public class RegExValidatorParser : NoValidatorParser
+    {
+        /// <summary>
+        /// </summary>
+        public RegExValidatorParser(PropertyInfo property, ConfigurationValidatorAttribute attribute)
+            : base(property, attribute)
+        {
+        }
+
+        /// <summary>
+        ///     Returns a simple type which extends the basic datatype and
+        ///     restricts it using a regex pattern
+        /// </summary>
+        public override XmlSchemaSimpleType GetSimpleType(string attributeDataType)
+        {
+            var retVal = base.GetSimpleType(attributeDataType);
+            var restriction = (XmlSchemaSimpleTypeRestriction) retVal.Content;
+
+            var rxa = (RegexStringValidatorAttribute) Attribute;
+            var pFacet = new XmlSchemaPatternFacet { Value = rxa.Regex };
+            restriction.Facets.Add(pFacet);
+
+            return retVal;
+        }
     }
-
-    /// <summary>
-    /// Returns a simple type which extends the basic datatype and
-    /// restricts it using a regex pattern
-    /// </summary>
-    public override XmlSchemaSimpleType GetSimpleType(string attributeDataType) {
-
-      XmlSchemaSimpleType retVal = base.GetSimpleType(attributeDataType);
-      XmlSchemaSimpleTypeRestriction restriction = (XmlSchemaSimpleTypeRestriction)retVal.Content;
-
-      RegexStringValidatorAttribute rxa = (RegexStringValidatorAttribute)attribute;
-      XmlSchemaPatternFacet pFacet = new XmlSchemaPatternFacet();
-      pFacet.Value = rxa.Regex;
-      restriction.Facets.Add(pFacet);
-
-      return retVal;
-
-    }
-
-  }
-
 }

@@ -1,8 +1,11 @@
 using System.IO;
 using System.Xml;
 using System.Xml.Schema;
+
 using JFDI.Utils.XSDExtractor.UnitTests.ConfigurationClasses;
+
 using NSubstitute;
+
 using NUnit.Framework;
 
 namespace JFDI.Utils.XSDExtractor.UnitTests.Bugs
@@ -27,7 +30,7 @@ namespace JFDI.Utils.XSDExtractor.UnitTests.Bugs
         {
             //  build a standard configurationsection with properties (using the mock object)
             var dm = Substitute.For<EnterpriseConfig>();
-            var enterpriseConfig = (EnterpriseConfig) dm;
+            var enterpriseConfig = dm;
             var generator = new XSDGenerator(enterpriseConfig.GetType());
             var schema = generator.GenerateXSD("UnitTestRootElement");
             var schemaXml = SchemaToString(schema);
@@ -37,7 +40,7 @@ namespace JFDI.Utils.XSDExtractor.UnitTests.Bugs
             //  again - seems crazy but works.
             //compileSet.Add(schema);
             var compileSet = new XmlSchemaSet();
-            schema = compileSet.Add(schema.TargetNamespace, new XmlTextReader(new StringReader(schemaXml)));
+            compileSet.Add(schema.TargetNamespace, new XmlTextReader(new StringReader(schemaXml)));
             compileSet.Compile();
         }
     }

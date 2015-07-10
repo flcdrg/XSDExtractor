@@ -1,4 +1,5 @@
 #region License
+
 /*
 JFDI the .Net Job Framework (http://jfdi.sourceforge.net)
 Copyright (C) 2006  Steven Ward (steve.ward.uk@gmail.com)
@@ -17,42 +18,36 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
+
 #endregion
 
 using System.Configuration;
 using System.Reflection;
 using System.Xml.Schema;
 
-namespace JFDI.Utils.XSDExtractor.Parsers.Validators {
-  
-  public class LongValidatorParser : NoValidatorParser {
-    
-    /// <summary>
-    /// 
-    /// </summary>
-    public LongValidatorParser(PropertyInfo property, ConfigurationValidatorAttribute attribute)
-      : base(property, attribute) {
+namespace JFDI.Utils.XSDExtractor.Parsers.Validators
+{
+    public class LongValidatorParser : NoValidatorParser
+    {
+        public LongValidatorParser(PropertyInfo property, ConfigurationValidatorAttribute attribute)
+            : base(property, attribute)
+        {
+        }
+
+        public override XmlSchemaSimpleType GetSimpleType(string attributeDataType)
+        {
+            var retVal = base.GetSimpleType(attributeDataType);
+            var restriction = (XmlSchemaSimpleTypeRestriction) retVal.Content;
+
+            var lva = (LongValidatorAttribute) Attribute;
+
+            var minFacet = new XmlSchemaMinInclusiveFacet { Value = lva.MinValue.ToString() };
+            restriction.Facets.Add(minFacet);
+
+            var maxFacet = new XmlSchemaMaxInclusiveFacet { Value = lva.MaxValue.ToString() };
+            restriction.Facets.Add(maxFacet);
+
+            return retVal;
+        }
     }
-
-    public override XmlSchemaSimpleType GetSimpleType(string attributeDataType) {
-      
-      XmlSchemaSimpleType retVal = base.GetSimpleType(attributeDataType);
-      XmlSchemaSimpleTypeRestriction restriction = (XmlSchemaSimpleTypeRestriction)retVal.Content;
-
-      LongValidatorAttribute lva = (LongValidatorAttribute)attribute;
-
-      XmlSchemaMinInclusiveFacet minFacet = new XmlSchemaMinInclusiveFacet();
-      minFacet.Value = lva.MinValue.ToString();
-      restriction.Facets.Add(minFacet);
-
-      XmlSchemaMaxInclusiveFacet maxFacet = new XmlSchemaMaxInclusiveFacet();
-      maxFacet.Value = lva.MaxValue.ToString();
-      restriction.Facets.Add(maxFacet);
-
-      return retVal;
-
-    }
-
-  }
-
 }

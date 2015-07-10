@@ -1,4 +1,5 @@
 #region License
+
 /*
 JFDI the .Net Job Framework (http://jfdi.sourceforge.net)
 Copyright (C) 2006  Steven Ward (steve.ward.uk@gmail.com)
@@ -17,6 +18,7 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
+
 #endregion
 
 using System.Configuration;
@@ -24,68 +26,63 @@ using System.Reflection;
 using System.Xml;
 using System.Xml.Schema;
 
-namespace JFDI.Utils.XSDExtractor.Parsers {
-  
-  /// <summary>
-  /// Responsible for converting a ConfigurationElement into
-  /// XmlSchema objects
-  /// </summary>
-  public class ConfigurationElementParser : TypeParser {
-  
+namespace JFDI.Utils.XSDExtractor.Parsers
+{
     /// <summary>
-    /// 
+    ///     Responsible for converting a ConfigurationElement into
+    ///     XmlSchema objects
     /// </summary>
-    public ConfigurationElementParser(XSDGenerator generator)
-      : base(generator) {
+    public class ConfigurationElementParser : TypeParser
+    {
+        /// <summary>
+        /// </summary>
+        public ConfigurationElementParser(XSDGenerator generator)
+            : base(generator)
+        {
+        }
+
+        /// <summary>
+        /// </summary>
+        public override void GenerateSchemaTypeObjects(PropertyInfo property, XmlSchemaType type)
+        {
+            var atts = GetAttributes<ConfigurationPropertyAttribute>(property);
+            if (atts.Length == 0)
+                return;
+
+            XmlSchemaComplexType ct;
+            if (Generator.ComplexMap.ContainsKey(property.PropertyType))
+            {
+                //already done the work
+                ct = Generator.ComplexMap[property.PropertyType];
+            }
+            else
+            {
+                //  got to generate a new one
+                ct = new XmlSchemaComplexType { Name = atts[0].Name + "CT" };
+                XmlHelper.CreateSchemaSequenceParticle(ct);
+
+                Generator.ComplexMap.Add(property.PropertyType, ct);
+                Generator.Schema.Items.Add(ct);
+            }
+
+            var element = new XmlSchemaElement
+            {
+                Name = atts[0].Name,
+                MinOccurs = atts[0].IsRequired ? 1 : 0,
+                SchemaTypeName = new XmlQualifiedName(XmlHelper.PrependNamespaceAlias(ct.Name))
+            };
+            var pct = type as XmlSchemaComplexType;
+            ((XmlSchemaGroupBase) pct.Particle).Items.Add(element);
+
+            //  add the documentation
+            AddAnnotation(property, element, atts[0]);
+
+            //  get all properties from the configuration object
+            foreach (var pi in GetProperties<ConfigurationPropertyAttribute>(property.PropertyType))
+            {
+                var parser = TypeParserFactory.GetParser(Generator, pi);
+                parser.GenerateSchemaTypeObjects(pi, ct);
+            }
+        }
     }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    public override void GenerateSchemaTypeObjects(PropertyInfo property, XmlSchemaType type) {
-
-      ConfigurationPropertyAttribute[] atts = GetAttributes<ConfigurationPropertyAttribute>(property);
-      if (atts.Length == 0)
-        return;
-
-      XmlSchemaComplexType ct;
-      if (generator.ComplexMap.ContainsKey(property.PropertyType)) { 
-        
-        //already done the work
-        ct = generator.ComplexMap[property.PropertyType]; 
-
-      } else {
-        
-        //  got to generate a new one
-        ct = new XmlSchemaComplexType();
-        ct.Name = atts[0].Name + "CT";
-        XMLHelper.CreateSchemaSequenceParticle(ct);
-
-        generator.ComplexMap.Add(property.PropertyType, ct);
-        generator.Schema.Items.Add(ct);
-
-      }
-
-      XmlSchemaElement element = new XmlSchemaElement();
-      element.Name = atts[0].Name;
-      element.MinOccurs = atts[0].IsRequired ? 1 : 0;
-      element.SchemaTypeName = new XmlQualifiedName(XMLHelper.PrependNamespaceAlias(ct.Name));
-      XmlSchemaComplexType pct = type as XmlSchemaComplexType;
-      ((XmlSchemaGroupBase)pct.Particle).Items.Add(element);
-
-      //  add the documentation
-      AddAnnotation(property, element, atts[0]);
-
-      //  get all properties from the configuration object
-      foreach (PropertyInfo pi in GetProperties<ConfigurationPropertyAttribute>(property.PropertyType)) {
-
-        TypeParser parser = TypeParserFactory.GetParser(generator, pi);
-        parser.GenerateSchemaTypeObjects(pi, ct);
-
-      }
-
-    }
-
-  }
-
 }

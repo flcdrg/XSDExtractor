@@ -1,4 +1,5 @@
 #region License
+
 /*
 JFDI the .Net Job Framework (http://jfdi.sourceforge.net)
 Copyright (C) 2006  Steven Ward (steve.ward.uk@gmail.com)
@@ -17,6 +18,7 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
+
 #endregion
 
 using System;
@@ -24,276 +26,279 @@ using System.IO;
 using System.Reflection;
 using System.Xml;
 
-namespace JFDI.Utils.XSDExtractor {
-  
-  /// <summary>
-  /// Responsible for converting any config section class
-  /// into an xsd which can then be used to create a 
-  /// valid config section 
-  /// </summary>
-  class Program {
-
-    string rootElementName = string.Empty;
-    bool silent = false;
-    string[] args;
-    string className = string.Empty;
-    FileInfo assemblyInfo = null;
-    
-    static void Main(string[] args) {
-      new Program().Run(args);
-    }
-
+namespace JFDI.Utils.XSDExtractor
+{
     /// <summary>
-    /// Starts the process of 
+    ///     Responsible for converting any config section class
+    ///     into an xsd which can then be used to create a
+    ///     valid config section
     /// </summary>
-    /// <param name="args"></param>
-    public void Run(string[] args) {
+    internal class Program
+    {
+        private string[] _args;
+        private FileInfo _assemblyInfo;
+        private string _className = string.Empty;
+        private string _rootElementName = string.Empty;
+        private bool _silent;
 
-      int converted = 0;
-      
-      this.args = FixArgs(args);
-      ParseSwitches();
-      ShowWelcomeMessage();
-      string[] assemblies = DiscoverAssemblies();
-
-      ConfigurationSectionFinderCoOrdinator coord = new ConfigurationSectionFinderCoOrdinator(assemblies);
-      Type[] types = coord.GetConfigSectionTypes(className);
-      foreach (Type configType in types) {
-
-        //  generate the schema
-        XSDGenerator generator = new XSDGenerator(configType);
-        string rootElement = string.IsNullOrEmpty(rootElementName) ? configType.ToString() : rootElementName;
-        generator.GenerateXSD(rootElement);
-
-        //  work out what we're going to call the xsd
-        FileInfo fInfo = new FileInfo(configType.Assembly.Location);
-        string fileName = fInfo.DirectoryName + @"\" + rootElement + ".xsd";
-
-        //  warn about the file replacement
-        if (!silent && File.Exists(fileName)) {
-          Console.WriteLine();
-          Console.Write(string.Format("{0} exists, replace (y/n)?", fileName));
-          if (Console.ReadKey().Key != ConsoleKey.Y)
-            continue;
-        } else {
-          Console.WriteLine(string.Format("Writing: {0}", fileName));
+        private static void Main(string[] args)
+        {
+            new Program().Run(args);
         }
 
-        using (MemoryStream memoryStream = new MemoryStream()) {
+        /// <summary>
+        ///     Starts the process of
+        /// </summary>
+        /// <param name="args"></param>
+        public void Run(string[] args)
+        {
+            var converted = 0;
 
-          converted++;
-          generator.Schema.Write(memoryStream);
+            _args = FixArgs(args);
+            ParseSwitches();
+            ShowWelcomeMessage();
+            var assemblies = DiscoverAssemblies();
 
-          using (MemoryStream commentedMemoryStream = AddXsdComment(memoryStream, configType)) {
+            var coord = new ConfigurationSectionFinderCoOrdinator(assemblies);
+            var types = coord.GetConfigSectionTypes(_className);
+            foreach (var configType in types)
+            {
+                //  generate the schema
+                var generator = new XSDGenerator(configType);
+                var rootElement = string.IsNullOrEmpty(_rootElementName) ? configType.ToString() : _rootElementName;
+                generator.GenerateXSD(rootElement);
 
-            using (FileStream fs = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None)) {
+                //  work out what we're going to call the xsd
+                var fInfo = new FileInfo(configType.Assembly.Location);
+                var fileName = fInfo.DirectoryName + @"\" + rootElement + ".xsd";
 
-              fs.Write(commentedMemoryStream.ToArray(), 0, (int)commentedMemoryStream.Length);
+                //  warn about the file replacement
+                if (!_silent && File.Exists(fileName))
+                {
+                    Console.WriteLine();
+                    Console.Write("{0} exists, replace (y/n)?", fileName);
+                    if (Console.ReadKey().Key != ConsoleKey.Y)
+                        continue;
+                }
+                else
+                {
+                    Console.WriteLine("Writing: {0}", fileName);
+                }
 
+                using (var memoryStream = new MemoryStream())
+                {
+                    converted++;
+                    generator.Schema.Write(memoryStream);
+
+                    using (var commentedMemoryStream = AddXsdComment(memoryStream, configType))
+                    {
+                        using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
+                        {
+                            fs.Write(commentedMemoryStream.ToArray(), 0, (int) commentedMemoryStream.Length);
+                        }
+                    }
+                }
             }
-          }
 
+            //  write out what we did
+            Console.WriteLine();
+            Console.WriteLine("# of assemblies inspected : {0}", assemblies.Length);
+            Console.WriteLine("# of types inspected      : {0}", types.Length);
+            Console.WriteLine("# of Xsd's created        : {0}", converted);
         }
 
-      }
+        /// <summary>
+        ///     Adds a standard comment section to the beginning of the Xsd file
+        ///     so that anybody reading the file can tell where it came from etc
+        /// </summary>
+        private MemoryStream AddXsdComment(MemoryStream memoryStream, Type type)
+        {
+            memoryStream.Position = 0;
+            var doc = new XmlDocument();
+            doc.Load(memoryStream);
 
-      //  write out what we did
-      Console.WriteLine();
-      Console.WriteLine(string.Format("# of assemblies inspected : {0}", assemblies.Length));
-      Console.WriteLine(string.Format("# of types inspected      : {0}", types.Length));
-      Console.WriteLine(string.Format("# of Xsd's created        : {0}", converted));
-      
-    }
+            var commentStr = Environment.NewLine + Environment.NewLine;
+            commentStr += "This file is auto-generated by XSDExtractor (v" +
+                          Assembly.GetExecutingAssembly().GetName().Version.ToString(3) +
+                          "), a command-line utility which forms part of the .Net Job Framework (http://jfdi.sourceforge.net) written in C# 2.0 by Steve Ward." +
+                          Environment.NewLine;
+            commentStr +=
+                "XSDExtractor is available at http://www.codeproject.com/useritems/extractxsdfromconfigsect.asp." +
+                Environment.NewLine;
+            commentStr +=
+                "The utility and source code are free to use and are released under the GNU Lesser General Public License (http://www.gnu.org/licenses/lgpl.txt)." +
+                Environment.NewLine;
+            commentStr +=
+                "They are both released with the usual yada-yada about limitations of responsibility when using it etc. Please read the GNU Lesser General Public License for full details." +
+                Environment.NewLine;
+            commentStr +=
+                "If you've got any questions or requests for the utility I may be contacted at steve.ward.uk@gmail.com." +
+                Environment.NewLine;
+            commentStr += Environment.NewLine;
+            commentStr += "File created: " + DateTime.UtcNow + " UTC" + Environment.NewLine;
+            commentStr += "By: " + Environment.UserDomainName + "\\" + Environment.UserName + Environment.NewLine;
+            commentStr += "Machine: " + Environment.MachineName + Environment.NewLine;
+            commentStr += "Command line: " + Environment.CommandLine + Environment.NewLine;
+            commentStr += "ConfigurationSection: " + type.AssemblyQualifiedName;
+            commentStr += Environment.NewLine + Environment.NewLine;
 
-    /// <summary>
-    /// Adds a standard comment section to the beginning of the Xsd file
-    /// so that anybody reading the file can tell where it came from etc
-    /// </summary>
-    private MemoryStream AddXsdComment(MemoryStream memoryStream, Type type) {
+            var comment = doc.CreateComment(commentStr);
+            doc.InsertBefore(comment, doc.DocumentElement);
 
-      memoryStream.Position = 0;
-      XmlDocument doc = new XmlDocument();
-      doc.Load(memoryStream);
+            var retVal = new MemoryStream();
+            doc.Save(retVal);
+            retVal.Position = 0;
 
-      string commentStr = Environment.NewLine + Environment.NewLine;
-      commentStr += "This file is auto-generated by XSDExtractor (v" + Assembly.GetExecutingAssembly().GetName().Version.ToString(3) + "), a command-line utility which forms part of the .Net Job Framework (http://jfdi.sourceforge.net) written in C# 2.0 by Steve Ward." + Environment.NewLine;
-      commentStr += "XSDExtractor is available at http://www.codeproject.com/useritems/extractxsdfromconfigsect.asp." + Environment.NewLine;
-      commentStr += "The utility and source code are free to use and are released under the GNU Lesser General Public License (http://www.gnu.org/licenses/lgpl.txt)." + Environment.NewLine;
-      commentStr += "They are both released with the usual yada-yada about limitations of responsibility when using it etc. Please read the GNU Lesser General Public License for full details." + Environment.NewLine;
-      commentStr += "If you've got any questions or requests for the utility I may be contacted at steve.ward.uk@gmail.com." + Environment.NewLine;
-      commentStr += Environment.NewLine;
-      commentStr += "File created: " + DateTime.UtcNow.ToString() + " UTC" + Environment.NewLine;
-      commentStr += "By: " + Environment.UserDomainName + "\\" + Environment.UserName + Environment.NewLine;
-      commentStr += "Machine: " + Environment.MachineName + Environment.NewLine;
-      commentStr += "Command line: " + Environment.CommandLine + Environment.NewLine;
-      commentStr += "ConfigurationSection: " + type.AssemblyQualifiedName;
-      commentStr += Environment.NewLine + Environment.NewLine;
-      
-      XmlComment comment = doc.CreateComment(commentStr);
-      doc.InsertBefore(comment, doc.DocumentElement);
-
-      MemoryStream retVal = new MemoryStream();
-      doc.Save(retVal);
-      retVal.Position = 0;
-
-      return retVal;
-
-    }
-
-    /// <summary>
-    /// Based on the command line options, this method
-    /// finds all the assemblies that we should work on
-    /// </summary>
-    /// <returns></returns>
-    private string[] DiscoverAssemblies() {
-
-      //  no assembly info given so get all of them!
-      if(assemblyInfo == null) {
-
-        ConsoleKeyInfo key = new ConsoleKeyInfo('y', ConsoleKey.Y, false, false, false);
-        if (!silent) {
-          Console.WriteLine();
-          Console.Write(string.Format("Generate Xml Schema's for all assemblies in current / sub directories (y/n)?"));
-          Console.WriteLine();
-          key = Console.ReadKey();
+            return retVal;
         }
-        
-        if (key.Key == ConsoleKey.Y) {
 
-          string[] dllAssemblies = Directory.GetFiles(Directory.GetCurrentDirectory(), "*.dll", SearchOption.AllDirectories);
-          string[] exeAssemblies = Directory.GetFiles(Directory.GetCurrentDirectory(), "*.exe", SearchOption.AllDirectories);
+        /// <summary>
+        ///     Based on the command line options, this method
+        ///     finds all the assemblies that we should work on
+        /// </summary>
+        /// <returns></returns>
+        private string[] DiscoverAssemblies()
+        {
+            //  no assembly info given so get all of them!
+            if (_assemblyInfo == null)
+            {
+                var key = new ConsoleKeyInfo('y', ConsoleKey.Y, false, false, false);
+                if (!_silent)
+                {
+                    Console.WriteLine();
+                    Console.Write("Generate Xml Schema\'s for all assemblies in current / sub directories (y/n)?");
+                    Console.WriteLine();
+                    key = Console.ReadKey();
+                }
 
-          string[] assemblies = new string[dllAssemblies.Length + exeAssemblies.Length];
-          Array.Copy(dllAssemblies, assemblies, dllAssemblies.Length);
-          Array.Copy(exeAssemblies, 0, assemblies, dllAssemblies.Length, exeAssemblies.Length);
+                if (key.Key == ConsoleKey.Y)
+                {
+                    var dllAssemblies = Directory.GetFiles(Directory.GetCurrentDirectory(), "*.dll",
+                        SearchOption.AllDirectories);
+                    var exeAssemblies = Directory.GetFiles(Directory.GetCurrentDirectory(), "*.exe",
+                        SearchOption.AllDirectories);
 
-          return assemblies;
+                    var assemblies = new string[dllAssemblies.Length + exeAssemblies.Length];
+                    Array.Copy(dllAssemblies, assemblies, dllAssemblies.Length);
+                    Array.Copy(exeAssemblies, 0, assemblies, dllAssemblies.Length, exeAssemblies.Length);
 
-        }
-        else {
-          ShowUsage();
-          Environment.Exit(-1);
-          return null;
-
-        }
-          
-      } else {
-
-        //  must be a dir
-        if (!assemblyInfo.Exists) {
-          
-          string[] dllAssemblies = Directory.GetFiles(assemblyInfo.Directory.FullName, "*.dll", SearchOption.AllDirectories);
-          string[] exeAssemblies = Directory.GetFiles(assemblyInfo.Directory.FullName, "*.exe", SearchOption.AllDirectories);
-
-          string[] assemblies = new string[dllAssemblies.Length + exeAssemblies.Length];
-          Array.Copy(dllAssemblies, assemblies, dllAssemblies.Length);
-          Array.Copy(exeAssemblies, 0, assemblies, dllAssemblies.Length, exeAssemblies.Length);
-
-          return assemblies;          
-          
-        } else {
-        
-          return new string[] { assemblyInfo.FullName };
-          
-        }
-        
-      }
-      
-    }
-
-    /// <summary>
-    /// Converts the switches so that the argument and the switch are 
-    /// in the same array element
-    /// </summary>
-    private string[] FixArgs(string[] args) {
-      
-      if(args.Length % 2 != 0) {
-        ShowUsage();
-        Environment.Exit(-1);
-      }
-      
-      string[] retVal = new string[args.Length / 2];
-      for (int i = 0; i < args.Length;i++) {
-        retVal[i - (i / 2) - (i % 2)] += args[i] + " ";
-      }
-      
-      return retVal;
-      
-    }
-    
-    /// <summary>
-    /// Reads the command line switches
-    /// </summary>
-    private void ParseSwitches() {
-      
-      foreach (string s in args) {
-
-        switch (s.Substring(1, 1).ToLower()) {
-          case "r":
-            rootElementName = s.Substring(2).Trim();
-            break;
-          case "s":
-            silent = Boolean.Parse(s.Substring(2).Trim());
-            break;
-          case "c":
-            className = s.Substring(2).Trim();
-            break;
-          case "a":
-            assemblyInfo = new FileInfo(s.Substring(2, s.Length - 2).Trim());
-            if (!assemblyInfo.Exists && !assemblyInfo.Directory.Exists) {
-              Console.WriteLine(string.Format("Could not find assembly specified: {0}", s.Substring(2).Trim()));
-              Environment.Exit(-1);
+                    return assemblies;
+                }
+                ShowUsage();
+                Environment.Exit(-1);
             }
-            break;
-          default:
-            ShowUsage();
-            Environment.Exit(-1);
-            break;
-        
+            //  must be a dir
+            if (!_assemblyInfo.Exists)
+            {
+                var dllAssemblies = Directory.GetFiles(_assemblyInfo.Directory.FullName, "*.dll",
+                    SearchOption.AllDirectories);
+                var exeAssemblies = Directory.GetFiles(_assemblyInfo.Directory.FullName, "*.exe",
+                    SearchOption.AllDirectories);
+
+                var assemblies = new string[dllAssemblies.Length + exeAssemblies.Length];
+                Array.Copy(dllAssemblies, assemblies, dllAssemblies.Length);
+                Array.Copy(exeAssemblies, 0, assemblies, dllAssemblies.Length, exeAssemblies.Length);
+
+                return assemblies;
+            }
+            return new[] { _assemblyInfo.FullName };
         }
-        
-      }
-      
+
+        /// <summary>
+        ///     Converts the switches so that the argument and the switch are
+        ///     in the same array element
+        /// </summary>
+        private string[] FixArgs(string[] args)
+        {
+            if (args.Length % 2 != 0)
+            {
+                ShowUsage();
+                Environment.Exit(-1);
+            }
+
+            var retVal = new string[args.Length / 2];
+            for (var i = 0; i < args.Length; i++)
+            {
+                retVal[i - (i / 2) - (i % 2)] += args[i] + " ";
+            }
+
+            return retVal;
+        }
+
+        /// <summary>
+        ///     Reads the command line switches
+        /// </summary>
+        private void ParseSwitches()
+        {
+            foreach (var s in _args)
+            {
+                switch (s.Substring(1, 1).ToLower())
+                {
+                    case "r":
+                        _rootElementName = s.Substring(2).Trim();
+                        break;
+                    case "s":
+                        _silent = bool.Parse(s.Substring(2).Trim());
+                        break;
+                    case "c":
+                        _className = s.Substring(2).Trim();
+                        break;
+                    case "a":
+                        _assemblyInfo = new FileInfo(s.Substring(2, s.Length - 2).Trim());
+                        if (!_assemblyInfo.Exists && !_assemblyInfo.Directory.Exists)
+                        {
+                            Console.WriteLine("Could not find assembly specified: {0}", s.Substring(2).Trim());
+                            Environment.Exit(-1);
+                        }
+                        break;
+                    default:
+                        ShowUsage();
+                        Environment.Exit(-1);
+                        break;
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Standard message given when the program starts
+        /// </summary>
+        private void ShowWelcomeMessage()
+        {
+            Console.WriteLine();
+            Console.WriteLine("XSDExtractor v{0} (c) 2006 Steve Ward (steve.ward.uk@gmail.com)",
+                Assembly.GetExecutingAssembly().GetName().Version.ToString(3));
+            Console.WriteLine("Released under the GNU Lesser General Public License");
+            Console.WriteLine();
+            Console.WriteLine(
+                "XSDExtractor will attempt to extract an Xml Schema (XSD) from a compiled\nConfigurationSection type. It does this by searching for\nConfigurationPropertyAttribute and ConfigurationCollectionAttribute attributes.");
+            Console.WriteLine();
+            Console.WriteLine(
+                "Warning: This program will give inconsistent results if the type being \nconverted has used the programmatic way of creating ConfigurationSection \nsub-classes as opposed to the declaritive model using attributes.");
+            Console.WriteLine(new string('-', 80));
+        }
+
+        /// <summary>
+        ///     Message which describes how to use the program
+        /// </summary>
+        private void ShowUsage()
+        {
+            Console.WriteLine();
+            Console.WriteLine("XSDExtractor [/R root] [/C class] [/A assembly] [/S bool]");
+            Console.WriteLine("");
+            Console.WriteLine("    /R\t\tName of the Xsd root element");
+            Console.WriteLine(
+                "    root\tIf ommited then the type name of the configurationsection \n\t\tis used instead.");
+            Console.WriteLine("");
+            Console.WriteLine(
+                "    /C\t\tName of the class which should be converted to an Xsd. If \n\t\tommited then all classes are examined.");
+            Console.WriteLine("    class\tFull name (including namespace) of class");
+            Console.WriteLine("");
+            Console.WriteLine(
+                "    /A\t\tName of the assembly which should be examined. If ommited then \n\t\tall assemblies in the current directory are examined.");
+            Console.WriteLine("    assembly\tName of the assembly to inspect (path information is optional)");
+            Console.WriteLine("");
+            Console.WriteLine("    /S\t\tSilence.");
+            Console.WriteLine("    bool\tIf true then the user is not prompted at any point.");
+        }
     }
-
-    /// <summary>
-    /// Standard message given when the program starts
-    /// </summary>
-    private void ShowWelcomeMessage() {
-
-      Console.WriteLine();
-      Console.WriteLine(string.Format("XSDExtractor v{0} (c) 2006 Steve Ward (steve.ward.uk@gmail.com)", Assembly.GetExecutingAssembly().GetName().Version.ToString(3)));
-      Console.WriteLine("Released under the GNU Lesser General Public License");
-      Console.WriteLine();
-      Console.WriteLine("XSDExtractor will attempt to extract an Xml Schema (XSD) from a compiled\nConfigurationSection type. It does this by searching for\nConfigurationPropertyAttribute and ConfigurationCollectionAttribute attributes.");
-      Console.WriteLine();
-      Console.WriteLine("Warning: This program will give inconsistent results if the type being \nconverted has used the programmatic way of creating ConfigurationSection \nsub-classes as opposed to the declaritive model using attributes.");
-      Console.WriteLine(new string('-', 80));
-
-    }
-    
-    /// <summary>
-    /// Message which describes how to use the program
-    /// </summary>
-    private void ShowUsage() {
-
-      Console.WriteLine();
-      Console.WriteLine("XSDExtractor [/R root] [/C class] [/A assembly] [/S bool]");
-      Console.WriteLine("");
-      Console.WriteLine("    /R\t\tName of the Xsd root element");
-      Console.WriteLine("    root\tIf ommited then the type name of the configurationsection \n\t\tis used instead.");
-      Console.WriteLine("");
-      Console.WriteLine("    /C\t\tName of the class which should be converted to an Xsd. If \n\t\tommited then all classes are examined.");
-      Console.WriteLine("    class\tFull name (including namespace) of class");
-      Console.WriteLine("");
-      Console.WriteLine("    /A\t\tName of the assembly which should be examined. If ommited then \n\t\tall assemblies in the current directory are examined.");
-      Console.WriteLine("    assembly\tName of the assembly to inspect (path information is optional)");
-      Console.WriteLine("");
-      Console.WriteLine("    /S\t\tSilence.");
-      Console.WriteLine("    bool\tIf true then the user is not prompted at any point.");
-      
-    }
-
-  }
-
 }

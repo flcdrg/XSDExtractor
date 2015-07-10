@@ -1,4 +1,5 @@
 #region License
+
 /*
 JFDI the .Net Job Framework (http://jfdi.sourceforge.net)
 Copyright (C) 2006  Steven Ward (steve.ward.uk@gmail.com)
@@ -17,93 +18,82 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
+
 #endregion
 
 using System.Xml.Schema;
 
-namespace JFDI.Utils.XSDExtractor {
-  
-  /// <summary>
-  /// Static class which provides methods to assist 
-  /// with XmlSchema type object manipulation / creation 
-  /// </summary>
-  public static class XMLHelper {
-    
+namespace JFDI.Utils.XSDExtractor
+{
     /// <summary>
-    /// All new types created with the XmlSchema classes
-    /// are placed into a namespace with this alias by default
+    ///     Static class which provides methods to assist
+    ///     with XmlSchema type object manipulation / creation
     /// </summary>
-    public const string TargetNamespaceAlias = "tns:";
+    public static class XmlHelper
+    {
+        /// <summary>
+        ///     All new types created with the XmlSchema classes
+        ///     are placed into a namespace with this alias by default
+        /// </summary>
+        public const string TargetNamespaceAlias = "tns:";
 
-    /// <summary>
-    /// Adds the <see cref="TargetNamespaceAlias"/> to the start of 
-    /// the name if it doesn't already exist
-    /// </summary>
-    public static string PrependNamespaceAlias(string name) {
+        /// <summary>
+        ///     Adds the <see cref="TargetNamespaceAlias" /> to the start of
+        ///     the name if it doesn't already exist
+        /// </summary>
+        public static string PrependNamespaceAlias(string name)
+        {
+            if (name.StartsWith(TargetNamespaceAlias))
+                return name;
 
-      if (name.StartsWith(TargetNamespaceAlias))
-        return name;
+            return TargetNamespaceAlias + name;
+        }
 
-      return TargetNamespaceAlias + name;
+        /// <summary>
+        ///     Creates a new element
+        /// </summary>
+        public static XmlSchemaElement CreateElement(string name)
+        {
+            var element = new XmlSchemaElement { Name = name };
+            return element;
+        }
 
+        /// <summary>
+        ///     Creates a new attribute
+        /// </summary>
+        public static XmlSchemaAttribute CreateAttribute(string name)
+        {
+            var attribute = new XmlSchemaAttribute { Name = name };
+            return attribute;
+        }
+
+        /// <summary>
+        ///     Creates a new complex type
+        /// </summary>
+        public static XmlSchemaComplexType CreateComplexType(string name)
+        {
+            var complexType = new XmlSchemaComplexType { Name = name + "CT" };
+            return complexType;
+        }
+
+        /// <summary>
+        ///     Creates a new group type
+        /// </summary>
+        public static XmlSchemaGroup CreateGroupType(string name)
+        {
+            var groupType = new XmlSchemaGroup { Name = name + "GroupCT" };
+            return groupType;
+        }
+
+        /// <summary>
+        ///     Creates a new <see cref="XmlSchemaSequence" /> particle type and assigns
+        ///     it to the <paramref name="complexType" /> parameter
+        /// </summary>
+        public static XmlSchemaSequence CreateSchemaSequenceParticle(XmlSchemaComplexType complexType)
+        {
+            var seq = new XmlSchemaSequence();
+            complexType.Particle = seq;
+            return seq;
+        }
     }
-
-    /// <summary>
-    /// Creates a new element
-    /// </summary>
-    public static XmlSchemaElement CreateElement(string name) {
-
-      XmlSchemaElement element = new XmlSchemaElement();
-      element.Name = name;
-      return element;
-
-    }
-
-    /// <summary>
-    /// Creates a new attribute
-    /// </summary>
-    public static XmlSchemaAttribute CreateAttribute(string name) {
-
-      XmlSchemaAttribute attribute = new XmlSchemaAttribute();
-      attribute.Name = name;
-      return attribute;
-
-    }
-
-    /// <summary>
-    /// Creates a new complex type
-    /// </summary>
-    public static XmlSchemaComplexType CreateComplexType(string name) {
-
-      XmlSchemaComplexType complexType = new XmlSchemaComplexType();
-      complexType.Name = name + "CT";
-      return complexType;
-
-    }
-
-    /// <summary>
-    /// Creates a new group type
-    /// </summary>
-    public static XmlSchemaGroup CreateGroupType(string name) {
-
-      XmlSchemaGroup groupType = new XmlSchemaGroup();
-      groupType.Name = name + "GroupCT";
-      return groupType;
-
-    }
-
-    /// <summary>
-    /// Creates a new <see cref="XmlSchemaSequence"/> particle type and assigns
-    /// it to the <paramref name="complexType"/> parameter
-    /// </summary>
-    public static XmlSchemaSequence CreateSchemaSequenceParticle(XmlSchemaComplexType complexType) {
-
-      XmlSchemaSequence seq = new XmlSchemaSequence();
-      complexType.Particle = seq;
-      return seq;
-
-    }
-
-  }
-  
 }
