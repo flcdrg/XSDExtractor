@@ -36,14 +36,14 @@ namespace JFDI.Utils.XSDExtractor.Parsers
     {
         /// <summary>
         /// </summary>
-        public ConfigurationElementParser(XSDGenerator generator)
+        public ConfigurationElementParser(XsdGenerator generator)
             : base(generator)
         {
         }
 
         /// <summary>
         /// </summary>
-        public override void GenerateSchemaTypeObjects(PropertyInfo property, XmlSchemaType type)
+        public override void GenerateSchemaTypeObjects(PropertyInfo property, XmlSchemaType type, int level)
         {
             var atts = GetAttributes<ConfigurationPropertyAttribute>(property);
             if (atts.Length == 0)
@@ -59,30 +59,33 @@ namespace JFDI.Utils.XSDExtractor.Parsers
             {
                 //  got to generate a new one
                 ct = new XmlSchemaComplexType { Name = atts[0].Name + "CT" };
+                ct.AddAnnotation(property, null);
                 XmlHelper.CreateSchemaSequenceParticle(ct);
 
                 Generator.ComplexMap.Add(property.PropertyType, ct);
                 Generator.Schema.Items.Add(ct);
 
                 //  get all properties from the configuration object
-                foreach (var pi in GetProperties<ConfigurationPropertyAttribute>(property.PropertyType))
+                var propertyInfos = GetProperties<ConfigurationPropertyAttribute>(property.PropertyType);
+
+                foreach (var pi in propertyInfos)
                 {
                     var parser = TypeParserFactory.GetParser(Generator, pi);
-                    parser.GenerateSchemaTypeObjects(pi, ct);
+                    parser.GenerateSchemaTypeObjects(pi, ct, level + 1);
                 }
             }
 
             var element = new XmlSchemaElement
             {
-                Name = property.PropertyType.Name + "CT",
+                Name = atts[0].Name, // property.PropertyType.Name + "CT",
                 MinOccurs = atts[0].IsRequired ? 1 : 0,
                 SchemaTypeName = new XmlQualifiedName(XmlHelper.PrependNamespaceAlias(ct.Name))
             };
-            var pct = type as XmlSchemaComplexType;
+            var pct = (XmlSchemaComplexType) type;
             ((XmlSchemaGroupBase) pct.Particle).Items.Add(element);
 
             //  add the documentation
-            AddAnnotation(property, element, atts[0]);
+            element.AddAnnotation(property, atts[0]);
         }
     }
 }

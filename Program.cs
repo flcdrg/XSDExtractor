@@ -40,6 +40,9 @@ namespace JFDI.Utils.XSDExtractor
         private string _className = string.Empty;
         private string _rootElementName = string.Empty;
         private bool _silent;
+        private bool _verbose;
+        private string _outputPath;
+        private bool _header;
 
         private static void Main(string[] args)
         {
@@ -61,16 +64,22 @@ namespace JFDI.Utils.XSDExtractor
 
             var coord = new ConfigurationSectionFinderCoOrdinator(assemblies);
             var types = coord.GetConfigSectionTypes(_className);
-            foreach (var configType in types)
+            foreach (Type configType in types)
             {
+                if (_verbose)
+                {
+                    Console.WriteLine(configType.FullName);
+                }
+
                 //  generate the schema
-                var generator = new XSDGenerator(configType);
+                var generator = new XsdGenerator(configType);
                 var rootElement = string.IsNullOrEmpty(_rootElementName) ? configType.ToString() : _rootElementName;
-                generator.GenerateXSD(rootElement);
+                generator.GenerateXsd(rootElement);
 
                 //  work out what we're going to call the xsd
                 var fInfo = new FileInfo(configType.Assembly.Location);
-                var fileName = fInfo.DirectoryName + @"\" + rootElement + ".xsd";
+                var directoryName = _outputPath ?? fInfo.DirectoryName;
+                var fileName = string.Format("{0}\\{1}.xsd", directoryName, configType);
 
                 //  warn about the file replacement
                 if (!_silent && File.Exists(fileName))
@@ -143,13 +152,15 @@ namespace JFDI.Utils.XSDExtractor
             commentStr += Environment.NewLine + Environment.NewLine;
 
             var comment = doc.CreateComment(commentStr);
-            doc.InsertBefore(comment, doc.DocumentElement);
 
-            var retVal = new MemoryStream();
-            doc.Save(retVal);
-            retVal.Position = 0;
+            if (_header)
+                doc.InsertBefore(comment, doc.DocumentElement);
 
-            return retVal;
+            var stream = new MemoryStream();
+            doc.Save(stream);
+            stream.Position = 0;
+
+            return stream;
         }
 
         /// <summary>
@@ -251,6 +262,25 @@ namespace JFDI.Utils.XSDExtractor
                             Environment.Exit(-1);
                         }
                         break;
+                    case "t":
+                        string t = s.Substring(2).Trim();
+                        if (!String.IsNullOrEmpty(t))
+                            t = new Uri(t).ToString();
+                        XmlHelper.UseTargetNamespace = t;
+                        break;
+                    case "l":
+                        XmlHelper.UseAll = bool.Parse(s.Substring(2).Trim());
+                        break;
+                    case "v":
+                        _verbose = bool.Parse(s.Substring(2).Trim());
+                        break;
+                    case "o":
+                        _outputPath = s.Substring(2).Trim();
+                        break;
+                    case "h":
+                        _header = bool.Parse(s.Substring(2).Trim());
+                        break;
+
                     default:
                         ShowUsage();
                         Environment.Exit(-1);
@@ -283,7 +313,7 @@ namespace JFDI.Utils.XSDExtractor
         private void ShowUsage()
         {
             Console.WriteLine();
-            Console.WriteLine("XSDExtractor [/R root] [/C class] [/A assembly] [/S bool]");
+            Console.WriteLine("XSDExtractor [/R root] [/C class] [/A assembly] [/S bool] [/T uri] [/L bool] [/O path]");
             Console.WriteLine("");
             Console.WriteLine("    /R\t\tName of the Xsd root element");
             Console.WriteLine(
@@ -299,6 +329,15 @@ namespace JFDI.Utils.XSDExtractor
             Console.WriteLine("");
             Console.WriteLine("    /S\t\tSilence.");
             Console.WriteLine("    bool\tIf true then the user is not prompted at any point.");
+            Console.WriteLine("");
+            Console.WriteLine("    /T\t\tTarget namespace");
+            Console.WriteLine("    string\tEmpty string or URI for target namespace");
+            Console.WriteLine("");
+            Console.WriteLine("    /L\t\tAll.");
+            Console.WriteLine("    bool\tIf true then xsd:groups are created with 'all' instead of 'sequence'.");
+            Console.WriteLine("");
+            Console.WriteLine("    /O\t\tOutput path");
+            Console.WriteLine("    string\tPath to write files to");
         }
     }
 }

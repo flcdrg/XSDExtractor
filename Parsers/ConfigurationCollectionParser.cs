@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #endregion
 
 using System.Configuration;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Xml;
@@ -38,7 +39,7 @@ namespace JFDI.Utils.XSDExtractor.Parsers
         /// <summary>
         ///     Creates an instance of the <see cref="ConfigurationCollectionParser" /> class
         /// </summary>
-        public ConfigurationCollectionParser(XSDGenerator generator)
+        public ConfigurationCollectionParser(XsdGenerator generator)
             : base(generator)
         {
         }
@@ -46,8 +47,11 @@ namespace JFDI.Utils.XSDExtractor.Parsers
         /// <summary>
         ///     Convert the property into a schema object
         /// </summary>
-        public override void GenerateSchemaTypeObjects(PropertyInfo property, XmlSchemaType type)
+        public override void GenerateSchemaTypeObjects(PropertyInfo property, XmlSchemaType type, int level)
         {
+            Debug.IndentLevel = level;
+            Debug.WriteLine("{0} {1} {2}", level, property.Name, type.Name);
+
             var configPropertyAtts = GetAttributes<ConfigurationPropertyAttribute>(property);
             if (configPropertyAtts.Length == 0)
                 return;
@@ -75,7 +79,7 @@ namespace JFDI.Utils.XSDExtractor.Parsers
                 ct = new XmlSchemaComplexType
                 {
                     Name = configAttribute.Name + "CT",
-                    Particle = new XmlSchemaSequence()
+                    Particle = XmlHelper.UseAll ? new XmlSchemaAll() : (XmlSchemaParticle) new XmlSchemaSequence()
                 };
 
                 Generator.ComplexMap.Add(property.PropertyType, ct);
@@ -88,33 +92,38 @@ namespace JFDI.Utils.XSDExtractor.Parsers
                 MinOccurs = configAttribute.IsRequired ? 1 : 0,
                 SchemaTypeName = new XmlQualifiedName(XmlHelper.PrependNamespaceAlias(ct.Name))
             };
-            var pct = type as XmlSchemaComplexType;
-            ((XmlSchemaGroupBase) pct.Particle).Items.Add(element);
+            var pct = (XmlSchemaComplexType) type;
+            var items = ((XmlSchemaGroupBase) pct.Particle).Items;
+
+            if (items.OfType<XmlSchemaElement>().All(x => x.Name != element.Name))
+                items.Add(element);
 
             //  get all properties from the configuration object
             foreach (var pi in GetProperties<ConfigurationPropertyAttribute>(property.PropertyType))
             {
+                Debug.WriteLine("ConfigurationProperty: " + pi.Name);
                 var parser = TypeParserFactory.GetParser(Generator, pi);
-                parser.GenerateSchemaTypeObjects(pi, ct);
+                parser.GenerateSchemaTypeObjects(pi, ct, level + 1);
             }
 
             //  add the documentation
-            AddAnnotation(property, element, configPropertyAtts[0]);
+            element.AddAnnotation(property, configPropertyAtts[0]);
 
             //  at this point the element has been added to the schema
             //  but we now need to add support for the child elements
             if (!typeAlreadyInSchema)
             {
-                AddCollectionChildren((XmlSchemaGroupBase) ct.Particle, configCollAttribute);
+                AddCollectionChildren((XmlSchemaGroupBase) ct.Particle, configCollAttribute, level);
             }
         }
 
         /// <summary>
         ///     Adds the child elements of the collection
         /// </summary>
-        protected void AddCollectionChildren(XmlSchemaGroupBase parentParticle,
-            ConfigurationCollectionAttribute configCollAttribute)
+        protected void AddCollectionChildren(XmlSchemaGroupBase parentParticle, ConfigurationCollectionAttribute configCollAttribute, int level)
         {
+            Debug.IndentLevel = level;
+
             XmlSchemaComplexType ct;
             if (Generator.ComplexMap.ContainsKey(configCollAttribute.ItemType))
             {
@@ -125,7 +134,7 @@ namespace JFDI.Utils.XSDExtractor.Parsers
             {
                 //  got to generate a new one for the collection
                 ct = new XmlSchemaComplexType { Name = configCollAttribute.ItemType.Name + "CT" };
-                XmlHelper.CreateSchemaSequenceParticle(ct); // = new XmlSchemaAll();
+                XmlHelper.CreateSchemaSequenceParticle(ct);
 
                 Generator.ComplexMap.Add(configCollAttribute.ItemType, ct);
                 Generator.Schema.Items.Add(ct);
@@ -146,7 +155,7 @@ namespace JFDI.Utils.XSDExtractor.Parsers
                     Name = configCollAttribute.ClearItemsName,
                     MinOccurs = 0,
                     MaxOccurs = 1,
-                    SchemaType = new XmlSchemaComplexType()
+                    //SchemaType = new XmlSchemaComplexType()
                 };
                 parentParticle.Items.Add(element);
 
@@ -154,9 +163,9 @@ namespace JFDI.Utils.XSDExtractor.Parsers
                 element = new XmlSchemaElement
                 {
                     MinOccurs = 0,
-                    MaxOccursString = "unbounded",
                     Name = configCollAttribute.RemoveItemName
                 };
+
                 var removeCt = new XmlSchemaComplexType();
                 element.SchemaType = removeCt;
 
@@ -169,6 +178,8 @@ namespace JFDI.Utils.XSDExtractor.Parsers
                     if (found)
                         break;
 
+                    Debug.WriteLine("Child property: " + pi.Name);
+
                     var cpAtts = GetAttributes<ConfigurationPropertyAttribute>(pi);
 
                     // this should return a standardtypeparser object, if it doesnt
@@ -178,12 +189,13 @@ namespace JFDI.Utils.XSDExtractor.Parsers
                     if (cpAtts.Any(att => att.IsKey))
                     {
                         var parser = TypeParserFactory.GetParser(Generator, pi);
-                        parser.GenerateSchemaTypeObjects(pi, removeCt);
+                        parser.GenerateSchemaTypeObjects(pi, removeCt, level + 1);
                         found = true;
                     }
                 }
 
                 parentParticle.Items.Add(element);
+                SetMaxOccurs(element, parentParticle);
             }
 
             //  add method
@@ -191,17 +203,30 @@ namespace JFDI.Utils.XSDExtractor.Parsers
             {
                 Name = configCollAttribute.AddItemName,
                 MinOccurs = 0,
-                MaxOccursString = "unbounded",
                 SchemaTypeName = new XmlQualifiedName(XmlHelper.PrependNamespaceAlias(ct.Name))
             };
+
             parentParticle.Items.Add(addElement);
 
+            SetMaxOccurs(addElement, parentParticle);
+
             //  get all properties from the configuration object
-            foreach (var pi in GetProperties<ConfigurationPropertyAttribute>(configCollAttribute.ItemType))
+            var propertyInfos = GetProperties<ConfigurationPropertyAttribute>(configCollAttribute.ItemType);
+            foreach (var pi in propertyInfos)
             {
+                Debug.WriteLine("\tConfigurationProperty: " + pi.Name);
+
                 var parser = TypeParserFactory.GetParser(Generator, pi);
-                parser.GenerateSchemaTypeObjects(pi, ct);
+                parser.GenerateSchemaTypeObjects(pi, ct, level + 1);
             }
+        }
+
+        private static void SetMaxOccurs(XmlSchemaElement element, XmlSchemaObject parent)
+        {
+            if (parent is XmlSchemaAll)
+                element.MaxOccurs = 1;
+            else
+                element.MaxOccursString = "unbounded";
         }
     }
 }

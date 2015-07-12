@@ -22,6 +22,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #endregion
 
 using System.Configuration;
+using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Xml;
 using System.Xml.Schema;
@@ -38,7 +40,7 @@ namespace JFDI.Utils.XSDExtractor.Parsers
         /// <summary>
         ///     Creates an instance of the <see cref="ConfigurationElementCollection" /> class
         /// </summary>
-        public DefaultConfigurationCollectionParser(XSDGenerator generator)
+        public DefaultConfigurationCollectionParser(XsdGenerator generator)
             : base(generator)
         {
         }
@@ -46,12 +48,20 @@ namespace JFDI.Utils.XSDExtractor.Parsers
         /// <summary>
         ///     Convert the property into a schema object
         /// </summary>
-        public override void GenerateSchemaTypeObjects(PropertyInfo property, XmlSchemaType type)
+        public override void GenerateSchemaTypeObjects(PropertyInfo property, XmlSchemaType type, int level)
         {
+            Debug.IndentLevel = level;
+            Debug.WriteLine("Default {0} {1} {2}", level, property.Name, type.Name);
+
             var configPropertyAtts = GetAttributes<ConfigurationPropertyAttribute>(property);
             if (configPropertyAtts.Length == 0)
                 return;
 
+            var element = new XmlSchemaElement();
+            element.Name = configPropertyAtts[0].Name;
+            var ct = new XmlSchemaComplexType();
+            element.SchemaType = ct;
+            
             var configCollPropertyAtts = GetAttributes<ConfigurationCollectionAttribute>(property);
             if (configCollPropertyAtts.Length == 0)
                 configCollPropertyAtts = GetAttributes<ConfigurationCollectionAttribute>(property.PropertyType);
@@ -65,23 +75,32 @@ namespace JFDI.Utils.XSDExtractor.Parsers
             //  expect in the collection
             var groupParticle =
                 XmlHelper.CreateGroupType(property.DeclaringType.FullName + "." + property.PropertyType.Name);
-            groupParticle.Particle = new XmlSchemaSequence();
+            groupParticle.Particle = XmlHelper.UseAll ? (XmlSchemaGroupBase) new XmlSchemaAll() : new XmlSchemaSequence();
+            // groupParticle.Particle = new XmlSchemaSequence();
 
             //  add support for the child elements
-            AddCollectionChildren(groupParticle.Particle, configCollAttribute);
+            AddCollectionChildren(groupParticle.Particle, configCollAttribute, level);
 
             //  now add the group to the schema and the parent CT
-            Generator.Schema.Items.Add(groupParticle);
+            if (Generator.Schema.Items.OfType<XmlSchemaGroup>().All(x => x.Name != groupParticle.Name))
+                Generator.Schema.Items.Add(groupParticle);
 
-            var parentCt = type as XmlSchemaComplexType;
+            var parentCt = (XmlSchemaComplexType) type;
             var groupRef = new XmlSchemaGroupRef
             {
                 RefName = new XmlQualifiedName(XmlHelper.PrependNamespaceAlias(groupParticle.Name))
             };
-            ((XmlSchemaGroupBase) parentCt.Particle).Items.Add(groupRef);
+
+            var items = ((XmlSchemaGroupBase) parentCt.Particle).Items;
+
+            ct.Particle = groupRef;
+            items.Add(element);
+
+/*            if (items.OfType<XmlSchemaGroupRef>().All(x => x.RefName != groupRef.RefName))
+                items.Add(groupRef);*/
 
             //  add the documentation
-            AddAnnotation(property, groupRef, configPropertyAtts[0]);
+            groupRef.AddAnnotation(property, configPropertyAtts[0]);
         }
     }
 }

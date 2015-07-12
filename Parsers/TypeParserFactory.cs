@@ -35,7 +35,7 @@ namespace JFDI.Utils.XSDExtractor.Parsers
         /// <summary>
         ///     Returns a new TypeParser object
         /// </summary>
-        public static TypeParser GetParser(XSDGenerator generator, PropertyInfo property)
+        public static TypeParser GetParser(XsdGenerator generator, PropertyInfo property)
         {
             var propertyAtts = TypeParser.GetAttributes<ConfigurationPropertyAttribute>(property);
             var collectionAtts = TypeParser.GetAttributes<ConfigurationCollectionAttribute>(property);

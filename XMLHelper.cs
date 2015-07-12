@@ -21,7 +21,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #endregion
 
+using System;
+using System.ComponentModel;
+using System.Configuration;
+using System.Reflection;
+using System.Xml;
 using System.Xml.Schema;
+
+using JFDI.Utils.XSDExtractor.Parsers;
 
 namespace JFDI.Utils.XSDExtractor
 {
@@ -37,13 +44,20 @@ namespace JFDI.Utils.XSDExtractor
         /// </summary>
         public const string TargetNamespaceAlias = "tns:";
 
+        public static string UseTargetNamespace;
+
+        /// <summary>
+        /// If true, use xs:all instead of xs:sequence
+        /// </summary>
+        public static bool UseAll { get; set; }
+
         /// <summary>
         ///     Adds the <see cref="TargetNamespaceAlias" /> to the start of
         ///     the name if it doesn't already exist
         /// </summary>
         public static string PrependNamespaceAlias(string name)
         {
-            if (name.StartsWith(TargetNamespaceAlias))
+            if (UseTargetNamespace == "" || name.StartsWith(TargetNamespaceAlias))
                 return name;
 
             return TargetNamespaceAlias + name;
@@ -89,11 +103,121 @@ namespace JFDI.Utils.XSDExtractor
         ///     Creates a new <see cref="XmlSchemaSequence" /> particle type and assigns
         ///     it to the <paramref name="complexType" /> parameter
         /// </summary>
-        public static XmlSchemaSequence CreateSchemaSequenceParticle(XmlSchemaComplexType complexType)
+        public static void CreateSchemaSequenceParticle(XmlSchemaComplexType complexType)
         {
-            var seq = new XmlSchemaSequence();
+            var seq = new XmlSchemaSequence(); // UseAll ? (XmlSchemaParticle) new XmlSchemaAll() : new XmlSchemaSequence();
             complexType.Particle = seq;
-            return seq;
+        }
+
+        /// <summary>
+        ///     Provides standard documentation for a type in the form of XmlSchemaDocumentation objects
+        /// </summary>
+        public static void AddAnnotation(this XmlSchemaAnnotated annotatedType, PropertyInfo property, ConfigurationPropertyAttribute configProperty)
+        {
+            annotatedType.Annotation = new XmlSchemaAnnotation();
+
+            //  human documentation
+            var descriptionAtts = TypeParser.GetAttributes<DescriptionAttribute>(property);
+
+            var xmlDocumentation = property.GetXmlDocumentation();
+
+            //  standard info
+            string standardDesc;
+
+            if (configProperty != null)
+            {
+                standardDesc = configProperty.IsRequired ? "Required" : "Optional";
+                standardDesc += " " + property.PropertyType.FullName;
+                standardDesc += " " +
+                                (configProperty.DefaultValue.ToString() == "System.Object"
+                                    ? ""
+                                    : "[" + configProperty.DefaultValue + "]");
+            }
+            else
+            {
+                standardDesc = "";
+            }
+
+            var documentation = new XmlSchemaDocumentation();
+            if (descriptionAtts.Length > 0)
+            {
+                documentation.Markup = TextToNodeArray(descriptionAtts[0].Description + " " + standardDesc);
+            }
+            else if (!String.IsNullOrEmpty(xmlDocumentation))
+            {
+                documentation.Markup = TextToNodeArray(xmlDocumentation);
+            }
+            else
+            {
+                documentation.Markup = TextToNodeArray(standardDesc);
+            }
+
+            //  machine documentation
+            var appInfo = new XmlSchemaAppInfo
+            {
+                Markup = TextToNodeArray(String.Format("{0}{1}", property.DeclaringType.FullName, property.Name))
+            };
+
+            //  add the documentation to the object
+            annotatedType.Annotation.Items.Add(documentation);
+            annotatedType.Annotation.Items.Add(appInfo);
+        }        
+        
+        public static void AddAnnotation(this XmlSchemaAnnotated annotatedType, Type type, ConfigurationPropertyAttribute configProperty)
+        {
+            annotatedType.Annotation = new XmlSchemaAnnotation();
+
+            //  human documentation
+            var descriptionAtts = TypeParser.GetAttributes<DescriptionAttribute>(type);
+
+            var xmlDocumentation = type.GetXmlDocumentation();
+
+            //  standard info
+            string standardDesc;
+
+            if (configProperty != null)
+            {
+                standardDesc = configProperty.IsRequired ? "Required" : "Optional";
+                standardDesc += " " + type.FullName;
+                standardDesc += " " +
+                                (configProperty.DefaultValue.ToString() == "System.Object"
+                                    ? ""
+                                    : "[" + configProperty.DefaultValue + "]");
+            }
+            else
+            {
+                standardDesc = "";
+            }
+
+            var documentation = new XmlSchemaDocumentation();
+            if (descriptionAtts.Length > 0)
+            {
+                documentation.Markup = TextToNodeArray(descriptionAtts[0].Description + " " + standardDesc);
+            }
+            else if (!String.IsNullOrEmpty(xmlDocumentation))
+            {
+                documentation.Markup = TextToNodeArray(xmlDocumentation);
+            }
+            else
+            {
+                documentation.Markup = TextToNodeArray(standardDesc);
+            }
+
+            //  machine documentation
+            var appInfo = new XmlSchemaAppInfo
+            {
+                Markup = TextToNodeArray(type.FullName)
+            };
+
+            //  add the documentation to the object
+            annotatedType.Annotation.Items.Add(documentation);
+            annotatedType.Annotation.Items.Add(appInfo);
+        }
+
+        public static XmlNode[] TextToNodeArray(string text)
+        {
+            var doc = new XmlDocument();
+            return new XmlNode[] { doc.CreateTextNode(text) };
         }
     }
 }

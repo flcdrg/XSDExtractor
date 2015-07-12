@@ -36,14 +36,14 @@ namespace JFDI.Utils.XSDExtractor.Parsers
     {
         /// <summary>
         /// </summary>
-        public StandardTypeParser(XSDGenerator generator)
+        public StandardTypeParser(XsdGenerator generator)
             : base(generator)
         {
         }
 
         /// <summary>
         /// </summary>
-        public override void GenerateSchemaTypeObjects(PropertyInfo property, XmlSchemaType type)
+        public override void GenerateSchemaTypeObjects(PropertyInfo property, XmlSchemaType type, int level)
         {
             var atts = GetAttributes<ConfigurationPropertyAttribute>(property);
             if (atts.Length == 0)
@@ -107,7 +107,7 @@ namespace JFDI.Utils.XSDExtractor.Parsers
             ct.Attributes.Add(attribute);
 
             //  add the documentation for this attribute
-            AddAnnotation(property, attribute, atts[0]);
+            XmlHelper.AddAnnotation(attribute, property, atts[0]);
         }
 
         /// <summary>

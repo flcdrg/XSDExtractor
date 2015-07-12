@@ -45,8 +45,8 @@ namespace JFDI.Utils.XSDExtractor.UnitTests
             //  build a standard configurationsection with properties (using the mock object)
             var dm = Substitute.For<ConfigurationSection>();
             var cs = dm;
-            var generator = new XSDGenerator(cs.GetType());
-            var schema = generator.GenerateXSD("UnitTestRootElement");
+            var generator = new XsdGenerator(cs.GetType());
+            var schema = generator.GenerateXsd("UnitTestRootElement");
             var schemaXml = SchemaToString(schema);
 
             //  load the schema into the document
@@ -62,8 +62,8 @@ namespace JFDI.Utils.XSDExtractor.UnitTests
         [Test(Description = "Checks that we correctly create an xsd for complicated ConfigurationSections.")]
         public void TestComplicatedConfigurationSection()
         {
-            var generator = new XSDGenerator(typeof(AppSettingsSection));
-            var schema = generator.GenerateXSD("UnitTestRootElement");
+            var generator = new XsdGenerator(typeof(AppSettingsSection));
+            var schema = generator.GenerateXsd("UnitTestRootElement");
             var schemaXml = SchemaToString(schema);
 
             //  load the schema into the document
@@ -74,8 +74,8 @@ namespace JFDI.Utils.XSDExtractor.UnitTests
         [Test(Description = "Checks that we correctly exclude the xmlns attribute.")]
         public void TestXmlNSAttribute()
         {
-            var generator = new XSDGenerator(typeof(ConfigurationWithXmlNSAttribute));
-            var schema = generator.GenerateXSD("UnitTestRootElement");
+            var generator = new XsdGenerator(typeof(ConfigurationWithXmlNSAttribute));
+            var schema = generator.GenerateXsd("UnitTestRootElement");
             var schemaXml = SchemaToString(schema);
 
             //  load the schema into the document

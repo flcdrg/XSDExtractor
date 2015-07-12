@@ -31,8 +31,8 @@ namespace JFDI.Utils.XSDExtractor.UnitTests.Bugs
             //  build a standard configurationsection with properties (using the mock object)
             var dm = Substitute.For<EnterpriseConfig>();
             var enterpriseConfig = dm;
-            var generator = new XSDGenerator(enterpriseConfig.GetType());
-            var schema = generator.GenerateXSD("UnitTestRootElement");
+            var generator = new XsdGenerator(enterpriseConfig.GetType());
+            var schema = generator.GenerateXsd("UnitTestRootElement");
             var schemaXml = SchemaToString(schema);
 
             //  not sure why, but the add method throws an exception when called with

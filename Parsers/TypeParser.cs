@@ -37,13 +37,13 @@ namespace JFDI.Utils.XSDExtractor.Parsers
     /// </summary>
     public abstract class TypeParser
     {
-        protected XSDGenerator Generator { get; }
+        protected XsdGenerator Generator { get; private set; }
 
         /// <summary>
         ///     Creates an instance of the TypeParser object. CTOR is protected
         ///     because only inheriting classes should be able to use this constructor
         /// </summary>
-        protected TypeParser(XSDGenerator generator)
+        protected TypeParser(XsdGenerator generator)
         {
             Generator = generator;
         }
@@ -100,52 +100,6 @@ namespace JFDI.Utils.XSDExtractor.Parsers
         ///     class to actually parse the <paramref name="property" /> and decide which
         ///     schema objects should be created
         /// </summary>
-        public abstract void GenerateSchemaTypeObjects(PropertyInfo property, XmlSchemaType type);
-
-        /// <summary>
-        ///     Provides standard documentation for a type in the form of XmlSchemaDocumentation objects
-        /// </summary>
-        protected void AddAnnotation(PropertyInfo property, XmlSchemaAnnotated annotatedType,
-            ConfigurationPropertyAttribute configProperty)
-        {
-            annotatedType.Annotation = new XmlSchemaAnnotation();
-
-            //  human documentation
-            var descriptionAtts = GetAttributes<DescriptionAttribute>(property);
-
-            //  standard info
-            var standardDesc = configProperty.IsRequired ? "Required" : "Optional";
-            standardDesc += " " + property.PropertyType.FullName;
-            standardDesc += " " +
-                            (configProperty.DefaultValue.ToString() == "System.Object"
-                                ? ""
-                                : "[" + configProperty.DefaultValue + "]");
-
-            var documentation = new XmlSchemaDocumentation();
-            if (descriptionAtts.Length > 0)
-            {
-                documentation.Markup = TextToNodeArray(descriptionAtts[0].Description + " " + standardDesc);
-            }
-            else
-            {
-                documentation.Markup = TextToNodeArray(standardDesc);
-            }
-
-            //  machine documentation
-            var appInfo = new XmlSchemaAppInfo
-            {
-                Markup = TextToNodeArray(string.Format("{0}{1}", property.DeclaringType.FullName, property.Name))
-            };
-
-            //  add the documentation to the object
-            annotatedType.Annotation.Items.Add(documentation);
-            annotatedType.Annotation.Items.Add(appInfo);
-        }
-
-        private XmlNode[] TextToNodeArray(string text)
-        {
-            var doc = new XmlDocument();
-            return new XmlNode[] { doc.CreateTextNode(text) };
-        }
+        public abstract void GenerateSchemaTypeObjects(PropertyInfo property, XmlSchemaType type, int level);
     }
 }

@@ -33,8 +33,8 @@ namespace JFDI.Utils.XSDExtractor.Parsers.Validators
     /// </summary>
     public abstract class ValidatorAttributeParser
     {
-        protected ConfigurationValidatorAttribute Attribute { get; }
-        protected PropertyInfo Property { get; }
+        protected ConfigurationValidatorAttribute Attribute { get; private set; }
+        protected PropertyInfo Property { get; private set; }
 
         /// <summary>
         /// </summary>
