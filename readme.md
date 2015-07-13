@@ -4,5 +4,7 @@ Originally published by Steve Ward at http://www.codeproject.com/Articles/15022/
 
 This repo take's Steve's source code, applies suggested fixes from the comments on the CodeProject page, and adds further enhancements.
 
+[![Build status](https://ci.appveyor.com/api/projects/status/18qlhsaethlt46h6?svg=true)](https://ci.appveyor.com/project/DavidGardiner/xsdextractor)
+
 ### Original information
 Original [readme.txt](readme.txt)
