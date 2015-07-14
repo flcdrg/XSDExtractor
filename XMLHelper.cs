@@ -103,9 +103,15 @@ namespace JFDI.Utils.XSDExtractor
         ///     Creates a new <see cref="XmlSchemaSequence" /> particle type and assigns
         ///     it to the <paramref name="complexType" /> parameter
         /// </summary>
-        public static void CreateSchemaSequenceParticle(XmlSchemaComplexType complexType)
+        public static void CreateSchemaSequenceParticle(this XmlSchemaComplexType complexType)
         {
-            var seq = new XmlSchemaSequence(); // UseAll ? (XmlSchemaParticle) new XmlSchemaAll() : new XmlSchemaSequence();
+            var seq = UseAll ? (XmlSchemaGroupBase) new XmlSchemaAll() : new XmlSchemaSequence();
+            complexType.Particle = seq;
+        }
+
+        public static void CreateSchemaSequenceParticle(this XmlSchemaGroup complexType)
+        {
+            var seq = UseAll ?  (XmlSchemaGroupBase) new XmlSchemaAll() : new XmlSchemaSequence();
             complexType.Particle = seq;
         }
 

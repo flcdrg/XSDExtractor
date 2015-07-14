@@ -79,9 +79,9 @@ namespace JFDI.Utils.XSDExtractor.Parsers
                 ct = new XmlSchemaComplexType
                 {
                     Name = configAttribute.Name + "CT",
-                    Particle = XmlHelper.UseAll ? new XmlSchemaAll() : (XmlSchemaParticle) new XmlSchemaSequence()
                 };
 
+                ct.CreateSchemaSequenceParticle();
                 Generator.ComplexMap.Add(property.PropertyType, ct);
                 Generator.Schema.Items.Add(ct);
             }
@@ -134,7 +134,7 @@ namespace JFDI.Utils.XSDExtractor.Parsers
             {
                 //  got to generate a new one for the collection
                 ct = new XmlSchemaComplexType { Name = configCollAttribute.ItemType.Name + "CT" };
-                XmlHelper.CreateSchemaSequenceParticle(ct);
+                ct.CreateSchemaSequenceParticle();
 
                 Generator.ComplexMap.Add(configCollAttribute.ItemType, ct);
                 Generator.Schema.Items.Add(ct);

@@ -73,10 +73,8 @@ namespace JFDI.Utils.XSDExtractor.Parsers
             //  we are actually going to add the collection to the parent type by creating
             //  a new group type that consists of a sequence of all the elements that we
             //  expect in the collection
-            var groupParticle =
-                XmlHelper.CreateGroupType(property.DeclaringType.FullName + "." + property.PropertyType.Name);
-            groupParticle.Particle = XmlHelper.UseAll ? (XmlSchemaGroupBase) new XmlSchemaAll() : new XmlSchemaSequence();
-            // groupParticle.Particle = new XmlSchemaSequence();
+            var groupParticle = XmlHelper.CreateGroupType(property.DeclaringType.FullName + "." + property.PropertyType.Name);
+            groupParticle.CreateSchemaSequenceParticle();
 
             //  add support for the child elements
             AddCollectionChildren(groupParticle.Particle, configCollAttribute, level);

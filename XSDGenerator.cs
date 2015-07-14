@@ -109,7 +109,7 @@ namespace JFDI.Utils.XSDExtractor
             ct.AddAnnotation(_configType, null);
             //  add the all extension to the complex type so that child elements 
             //  may occur in any order
-            XmlHelper.CreateSchemaSequenceParticle(ct);
+            ct.CreateSchemaSequenceParticle();
 
             //  finally assign the type to the root element
             //  and add it to the document

@@ -60,7 +60,7 @@ namespace JFDI.Utils.XSDExtractor.Parsers
                 //  got to generate a new one
                 ct = new XmlSchemaComplexType { Name = atts[0].Name + "CT" };
                 ct.AddAnnotation(property, null);
-                XmlHelper.CreateSchemaSequenceParticle(ct);
+                ct.CreateSchemaSequenceParticle();
 
                 Generator.ComplexMap.Add(property.PropertyType, ct);
                 Generator.Schema.Items.Add(ct);
