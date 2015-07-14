@@ -25,6 +25,7 @@ using System;
 using System.ComponentModel;
 using System.Configuration;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Schema;
 
@@ -124,75 +125,42 @@ namespace JFDI.Utils.XSDExtractor
 
             //  human documentation
             var descriptionAtts = TypeParser.GetAttributes<DescriptionAttribute>(property);
-
             var xmlDocumentation = property.GetXmlDocumentation();
+            var fullName = property.PropertyType.FullName;
+            var typeName = String.Format("{0}{1}", property.DeclaringType.FullName, property.Name);
 
-            //  standard info
-            string standardDesc;
+            ApplyAnnotation(annotatedType, descriptionAtts, configProperty, xmlDocumentation, typeName, fullName);
+        }
 
-            if (configProperty != null)
-            {
-                standardDesc = configProperty.IsRequired ? "Required" : "Optional";
-                standardDesc += " " + property.PropertyType.FullName;
-                standardDesc += " " +
-                                (configProperty.DefaultValue.ToString() == "System.Object"
-                                    ? ""
-                                    : "[" + configProperty.DefaultValue + "]");
-            }
-            else
-            {
-                standardDesc = "";
-            }
-
-            var documentation = new XmlSchemaDocumentation();
-            if (descriptionAtts.Length > 0)
-            {
-                documentation.Markup = TextToNodeArray(descriptionAtts[0].Description + " " + standardDesc);
-            }
-            else if (!String.IsNullOrEmpty(xmlDocumentation))
-            {
-                documentation.Markup = TextToNodeArray(xmlDocumentation);
-            }
-            else
-            {
-                documentation.Markup = TextToNodeArray(standardDesc);
-            }
-
-            //  machine documentation
-            var appInfo = new XmlSchemaAppInfo
-            {
-                Markup = TextToNodeArray(String.Format("{0}{1}", property.DeclaringType.FullName, property.Name))
-            };
-
-            //  add the documentation to the object
-            annotatedType.Annotation.Items.Add(documentation);
-            annotatedType.Annotation.Items.Add(appInfo);
-        }        
-        
         public static void AddAnnotation(this XmlSchemaAnnotated annotatedType, Type type, ConfigurationPropertyAttribute configProperty)
         {
             annotatedType.Annotation = new XmlSchemaAnnotation();
 
             //  human documentation
             var descriptionAtts = TypeParser.GetAttributes<DescriptionAttribute>(type);
-
             var xmlDocumentation = type.GetXmlDocumentation();
+            var typeName = type.FullName;
 
-            //  standard info
+            ApplyAnnotation(annotatedType, descriptionAtts, configProperty, xmlDocumentation, typeName, typeName);
+        }
+
+        private static void ApplyAnnotation(XmlSchemaAnnotated annotatedType, DescriptionAttribute[] descriptionAtts,
+            ConfigurationPropertyAttribute configProperty, string xmlDocumentation, string typeName, string fullName)
+        {
             string standardDesc;
 
             if (configProperty != null)
             {
                 standardDesc = configProperty.IsRequired ? "Required" : "Optional";
-                standardDesc += " " + type.FullName;
+                standardDesc += " " + fullName;
                 standardDesc += " " +
                                 (configProperty.DefaultValue.ToString() == "System.Object"
-                                    ? ""
+                                    ? string.Empty
                                     : "[" + configProperty.DefaultValue + "]");
             }
             else
             {
-                standardDesc = "";
+                standardDesc = string.Empty;
             }
 
             var documentation = new XmlSchemaDocumentation();
@@ -202,6 +170,9 @@ namespace JFDI.Utils.XSDExtractor
             }
             else if (!String.IsNullOrEmpty(xmlDocumentation))
             {
+                // normalise line endings and remove trailing whitespace(s)
+                xmlDocumentation = Regex.Replace(xmlDocumentation, @"\s*(\r\n|\n\r|\n|\r)", "\r\n");
+
                 documentation.Markup = TextToNodeArray(xmlDocumentation);
             }
             else
@@ -212,7 +183,7 @@ namespace JFDI.Utils.XSDExtractor
             //  machine documentation
             var appInfo = new XmlSchemaAppInfo
             {
-                Markup = TextToNodeArray(type.FullName)
+                Markup = TextToNodeArray(typeName)
             };
 
             //  add the documentation to the object
