@@ -89,10 +89,12 @@ namespace JFDI.Utils.XSDExtractor.Parsers
                 RefName = new XmlQualifiedName(XmlHelper.PrependNamespaceAlias(groupParticle.Name))
             };
 
+            ct.Particle = groupRef;
+
             var items = ((XmlSchemaGroupBase) parentCt.Particle).Items;
 
-            ct.Particle = groupRef;
-            items.Add(element);
+            if (items.OfType<XmlSchemaElement>().All(x => x.Name != element.Name))
+                items.Add(element);
 
 /*            if (items.OfType<XmlSchemaGroupRef>().All(x => x.RefName != groupRef.RefName))
                 items.Add(groupRef);*/

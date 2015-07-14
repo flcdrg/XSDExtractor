@@ -21,6 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #endregion
 
+using System;
 using System.Configuration;
 using System.Linq;
 using System.Reflection;
@@ -104,8 +105,23 @@ namespace JFDI.Utils.XSDExtractor.Parsers
             attribute.SchemaType = AddRestriction(property, attributeType);
             attribute.Use = firstAttribute.IsRequired ? XmlSchemaUse.Required : XmlSchemaUse.Optional;
 
-            if (firstAttribute.DefaultValue != null && firstAttribute.DefaultValue.ToString() != "System.Object")
-                attribute.DefaultValue = firstAttribute.DefaultValue.ToString();
+            if (!firstAttribute.IsRequired)
+            {
+                // Only set default value if optional
+                var defaultValue = firstAttribute.DefaultValue;
+                if (defaultValue != null && defaultValue.ToString() != "System.Object" &&
+                    defaultValue.ToString() != String.Empty)
+                {
+                    var s = defaultValue.ToString();
+
+
+                    if (defaultValue is bool)
+                    {
+                        s = s.ToLowerInvariant();
+                    }
+                    attribute.DefaultValue = s;
+                }
+            }
 
             var ct = (XmlSchemaComplexType) type;
             ct.Attributes.Add(attribute);

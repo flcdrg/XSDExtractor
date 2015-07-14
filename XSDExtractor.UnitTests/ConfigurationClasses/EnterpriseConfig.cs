@@ -20,6 +20,13 @@ namespace JFDI.Utils.XSDExtractor.UnitTests.ConfigurationClasses
             get { return (PersonConfigCollection) base["Managers"]; }
         }
 
+        [ConfigurationProperty("Dept", IsRequired = true)]
+        public DeparmentConfig Department
+        {
+            get { return (DeparmentConfig) this["dept"]; }
+            set { this["dept"] = value; }
+        }
+
         [ConfigurationProperty("Deparments",
             IsRequired = true,
             IsDefaultCollection = false)]
@@ -42,6 +49,13 @@ namespace JFDI.Utils.XSDExtractor.UnitTests.ConfigurationClasses
         {
             get { return (ConsoleColor) this["Colour"]; }
             set { this["Colour"] = value; }
+        }
+
+        [ConfigurationProperty("Extra", DefaultValue = false)]
+        public bool Extra
+        {
+            get { return (bool) this["extra"]; }
+            set { this["extra"] = value; }
         }
     }
 
@@ -80,15 +94,22 @@ namespace JFDI.Utils.XSDExtractor.UnitTests.ConfigurationClasses
         }
 
         [ConfigurationProperty("Members",
-            IsRequired = true, IsDefaultCollection = false)]
+            IsRequired = true, IsDefaultCollection = true)]
         public PersonConfigCollection Members
         {
             get { return (PersonConfigCollection) base["Members"]; }
         }
+
+        [ConfigurationProperty("OtherMembers",
+            IsRequired = true, IsDefaultCollection = true)]
+        public PersonConfigCollection OtherMembers
+        {
+            get { return (PersonConfigCollection) this["OtherMembers"]; }
+        }
     }
 
-    [ConfigurationCollection(typeof(DeparmentConfig), AddItemName = "Person",
-        CollectionType = ConfigurationElementCollectionType.BasicMap)]
+    [ConfigurationCollection(typeof(DeparmentConfig),
+        CollectionType = ConfigurationElementCollectionType.AddRemoveClearMap)]
     public class DeparmentConfigCollection : ConfigurationElementCollection
     {
         protected override ConfigurationElement CreateNewElement()

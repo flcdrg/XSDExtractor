@@ -81,7 +81,12 @@ namespace JFDI.Utils.XSDExtractor.Parsers
                     Name = configAttribute.Name + "CT",
                 };
 
-                ct.CreateSchemaSequenceParticle();
+                var seq = new XmlSchemaChoice
+                {
+                    MinOccurs = 0,
+                    MaxOccursString = "unbounded"
+                };
+                ct.Particle = seq;
                 Generator.ComplexMap.Add(property.PropertyType, ct);
                 Generator.Schema.Items.Add(ct);
             }
