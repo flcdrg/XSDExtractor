@@ -74,7 +74,12 @@ namespace JFDI.Utils.XSDExtractor.Parsers
             //  a new group type that consists of a sequence of all the elements that we
             //  expect in the collection
             var groupParticle = XmlHelper.CreateGroupType(property.DeclaringType.FullName + "." + property.PropertyType.Name);
-            groupParticle.CreateSchemaSequenceParticle();
+            XmlSchemaGroupBase seq;
+            if (XmlHelper.UseAll && (configCollAttribute.CollectionType == ConfigurationElementCollectionType.AddRemoveClearMap || configCollAttribute.CollectionType == ConfigurationElementCollectionType.AddRemoveClearMapAlternate))
+                seq = new XmlSchemaAll();
+            else
+                seq = new XmlSchemaSequence();
+            groupParticle.Particle = seq;
 
             //  add support for the child elements
             AddCollectionChildren(groupParticle.Particle, configCollAttribute, level);

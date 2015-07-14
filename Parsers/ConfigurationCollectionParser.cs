@@ -145,6 +145,14 @@ namespace JFDI.Utils.XSDExtractor.Parsers
                 Generator.Schema.Items.Add(ct);
             }
 
+            //  add method
+            var addElement = new XmlSchemaElement
+            {
+                Name = configCollAttribute.AddItemName,
+                MinOccurs = 0,
+                SchemaTypeName = new XmlQualifiedName(XmlHelper.PrependNamespaceAlias(ct.Name))
+            };
+
             //  ok we now have the child element as a complextype object
             //  but we need to add three elements to the parent complex type
             //  which support the add / remove / clear methods of the collection
@@ -162,6 +170,7 @@ namespace JFDI.Utils.XSDExtractor.Parsers
                     MaxOccurs = 1,
                     //SchemaType = new XmlSchemaComplexType()
                 };
+
                 parentParticle.Items.Add(element);
 
                 //  remove method
@@ -201,19 +210,11 @@ namespace JFDI.Utils.XSDExtractor.Parsers
 
                 parentParticle.Items.Add(element);
                 SetMaxOccurs(element, parentParticle);
+
+                SetMaxOccurs(addElement, parentParticle);
             }
 
-            //  add method
-            var addElement = new XmlSchemaElement
-            {
-                Name = configCollAttribute.AddItemName,
-                MinOccurs = 0,
-                SchemaTypeName = new XmlQualifiedName(XmlHelper.PrependNamespaceAlias(ct.Name))
-            };
-
             parentParticle.Items.Add(addElement);
-
-            SetMaxOccurs(addElement, parentParticle);
 
             //  get all properties from the configuration object
             var propertyInfos = GetProperties<ConfigurationPropertyAttribute>(configCollAttribute.ItemType);

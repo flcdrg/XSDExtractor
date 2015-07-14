@@ -60,6 +60,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Bugs\DuplicateCollectionTypes.cs" />
+    <Compile Include="CollectionTests.cs" />
     <Compile Include="ConfigurationClasses\ConfigurationWithXmlNSAttribute.cs" />
     <Compile Include="EdgeCases.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -76,6 +77,12 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="bin\Debug\" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="MultipleItemsInBasicCollection.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="MultipleItemsInAddRemoveCollection.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
