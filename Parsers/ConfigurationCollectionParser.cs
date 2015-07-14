@@ -210,9 +210,9 @@ namespace JFDI.Utils.XSDExtractor.Parsers
 
                 parentParticle.Items.Add(element);
                 SetMaxOccurs(element, parentParticle);
-
-                SetMaxOccurs(addElement, parentParticle);
             }
+
+            SetMaxOccurs(addElement, parentParticle);
 
             parentParticle.Items.Add(addElement);
 

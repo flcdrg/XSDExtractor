@@ -1,15 +1,11 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Resources;
 using System.Xml;
 using System.Xml.Schema;
 
 using JFDI.Utils.XSDExtractor.UnitTests.ConfigurationClasses;
-
-using NSubstitute;
 
 using NUnit.Framework;
 
@@ -27,7 +23,7 @@ namespace JFDI.Utils.XSDExtractor.UnitTests
 
         private string[] XmlResources()
         {
-            return Assembly.GetExecutingAssembly().GetManifestResourceNames().Where(n => n.EndsWith(".xml")).ToArray();
+            return Assembly.GetExecutingAssembly().GetManifestResourceNames().Where(n => n.EndsWith(".xml") && n.Contains("MultipleItemsIn")).ToArray();
         }
 
         [Test]
@@ -35,18 +31,18 @@ namespace JFDI.Utils.XSDExtractor.UnitTests
         public void Verify(string resourceName)
         {
             //  build a standard configurationsection with properties (using the mock object)
-            var dm = Substitute.For<EnterpriseConfig>();
-            var enterpriseConfig = dm;
-            XmlHelper.UseTargetNamespace = string.Empty;
+            var enterpriseConfig = new EnterpriseConfig();
+            XmlHelper.UseAll = true;
 
-            var generator = new XsdGenerator(enterpriseConfig.GetType());
-            XmlSchema schema = generator.GenerateXsd("UnitTestRootElement");
-
+            var configType = enterpriseConfig.GetType();
+            var generator = new XsdGenerator(configType);
+            XmlSchema schema = generator.GenerateXsd(configType.FullName);
             var schemaXml = SchemaToString(schema);
 
-
             var schemas = new XmlSchemaSet();
-            schemas.Add("", XmlReader.Create(new StringReader(schemaXml)));
+            schemas.Add("http://JFDI.Utils.XSDExtractor.UnitTests.ConfigurationClasses.EnterpriseConfig", XmlReader.Create(new StringReader(schemaXml)));
+            schemas.CompilationSettings.EnableUpaCheck = true;
+            schemas.Compile();
 
             var assembly = Assembly.GetExecutingAssembly();
 
@@ -55,17 +51,65 @@ namespace JFDI.Utils.XSDExtractor.UnitTests
                 var doc = new XmlDocument();
                 doc.Load(stream);
 
-                //Debug.WriteLine(doc.OuterXml);
-
                 doc.Schemas.Add(schemas);
+
+                Debug.WriteLine(doc.OuterXml);
+
 
                 Debug.WriteLine("------------------");
                 doc.Validate(((sender, args) =>
                 {
-                    //Assert.Fail(args.Message);
                     Debug.WriteLine("{0} {1}", args.Message, args.Severity);
+                    Assert.Fail(args.Message);
                 }));
             }
+        }
+
+        private string[] TwoChildCollectionsNotRequiredConfigResources()
+        {
+            return Assembly.GetExecutingAssembly().GetManifestResourceNames().Where(n => n.EndsWith(".xml") && n.Contains("TwoChildCollectionsNotRequiredConfig")).ToArray();
+        }
+
+        [Test]
+        [TestCaseSource("TwoChildCollectionsNotRequiredConfigResources")]
+        public void TwoChildCollectionsNotRequiredConfig(string resourceName)
+        {
+            //  build a standard configurationsection with properties (using the mock object)
+            var configElement = new TwoChildCollectionsNotRequiredConfig();
+            XmlHelper.UseAll = true;
+
+            var configType = configElement.GetType();
+            var generator = new XsdGenerator(configType);
+            XmlSchema schema = generator.GenerateXsd(configType.FullName);
+            var schemaXml = SchemaToString(schema);
+
+            Debug.WriteLine(schemaXml);
+
+            var schemas = new XmlSchemaSet();
+            schemas.Add(schema.TargetNamespace, XmlReader.Create(new StringReader(schemaXml)));
+            schemas.CompilationSettings.EnableUpaCheck = true;
+            schemas.Compile();
+
+            var assembly = Assembly.GetExecutingAssembly();
+
+            using (Stream stream = assembly.GetManifestResourceStream(resourceName))
+            {
+                var doc = new XmlDocument();
+                doc.Load(stream);
+
+                doc.Schemas.Add(schemas);
+
+                Debug.WriteLine(doc.OuterXml);
+
+
+                Debug.WriteLine("------------------");
+                doc.Validate(((sender, args) =>
+                {
+                    Debug.WriteLine("{0} {1}", args.Message, args.Severity);
+                    Assert.Fail(args.Message);
+                }));
+            }
+
         }
     }
 }

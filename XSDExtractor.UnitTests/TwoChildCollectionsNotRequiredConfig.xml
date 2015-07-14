@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<JFDI.Utils.XSDExtractor.UnitTests.ConfigurationClasses.TwoChildCollectionsNotRequiredConfig xmlns="http://JFDI.Utils.XSDExtractor.UnitTests.ConfigurationClasses.TwoChildCollectionsNotRequiredConfig">
+  <child>
+    <OtherMembers>
+      <Person Name="Name1" Colour="Red" Extra="false" />
+      <Person Name="Name2" Colour="Black" Extra="true" />
+      <Person Name="Name3" Colour="DarkBlue" Extra="false" />
+    </OtherMembers>
+    <Members>
+      <Person Name="Name4" Colour="DarkGreen" Extra="true" />
+      <Person Name="Name5" Colour="DarkCyan" Extra="false" />
+      <Person Name="Name6" Colour="DarkRed" Extra="true" />
+    </Members>
+  </child>
+</JFDI.Utils.XSDExtractor.UnitTests.ConfigurationClasses.TwoChildCollectionsNotRequiredConfig>

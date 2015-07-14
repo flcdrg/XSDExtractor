@@ -58,10 +58,17 @@ namespace JFDI.Utils.XSDExtractor.Parsers
                 return;
 
             var element = new XmlSchemaElement();
-            element.Name = configPropertyAtts[0].Name;
+            var firstConfigPropertyAttribute = configPropertyAtts[0];
+
+            element.Name = firstConfigPropertyAttribute.Name;
+            if (!firstConfigPropertyAttribute.IsRequired)
+            {
+                element.MinOccurs = 0;
+            }
+
             var ct = new XmlSchemaComplexType();
             element.SchemaType = ct;
-            
+           
             var configCollPropertyAtts = GetAttributes<ConfigurationCollectionAttribute>(property);
             if (configCollPropertyAtts.Length == 0)
                 configCollPropertyAtts = GetAttributes<ConfigurationCollectionAttribute>(property.PropertyType);
@@ -73,7 +80,11 @@ namespace JFDI.Utils.XSDExtractor.Parsers
             //  we are actually going to add the collection to the parent type by creating
             //  a new group type that consists of a sequence of all the elements that we
             //  expect in the collection
-            var groupParticle = XmlHelper.CreateGroupType(property.DeclaringType.FullName + "." + property.PropertyType.Name);
+
+            var name = property.DeclaringType.FullName + "." + property.PropertyType.Name;
+            name = name.Replace("+", "_");
+            var groupParticle = XmlHelper.CreateGroupType(name);
+            
             XmlSchemaGroupBase seq;
             if (XmlHelper.UseAll && (configCollAttribute.CollectionType == ConfigurationElementCollectionType.AddRemoveClearMap || configCollAttribute.CollectionType == ConfigurationElementCollectionType.AddRemoveClearMapAlternate))
                 seq = new XmlSchemaAll();
@@ -105,7 +116,7 @@ namespace JFDI.Utils.XSDExtractor.Parsers
                 items.Add(groupRef);*/
 
             //  add the documentation
-            groupRef.AddAnnotation(property, configPropertyAtts[0]);
+            groupRef.AddAnnotation(property, firstConfigPropertyAttribute);
         }
     }
 }
