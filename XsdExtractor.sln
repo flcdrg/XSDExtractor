@@ -1,14 +1,14 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.22823.1
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{94DCD7A3-0219-42D7-8010-374C9FB42CCF}"
 	ProjectSection(SolutionItems) = preProject
 		readme.txt = readme.txt
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JFDI.Utils.XSDExtractor", "JFDI.Utils.XSDExtractor.csproj", "{1FB9533E-1D23-4100-9BEB-BA3092C3DDAD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JFDI.Utils.XSDExtractor", "XSDExtractor\JFDI.Utils.XSDExtractor.csproj", "{1FB9533E-1D23-4100-9BEB-BA3092C3DDAD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XSDExtractor.UnitTests", "XSDExtractor.UnitTests\XSDExtractor.UnitTests.csproj", "{787296B9-0743-48ED-9231-F913603E8986}"
 EndProject

@@ -69,12 +69,6 @@
     <Compile Include="ConfigurationClasses\EnterpriseConfig.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\JFDI.Utils.XSDExtractor.csproj">
-      <Project>{1FB9533E-1D23-4100-9BEB-BA3092C3DDAD}</Project>
-      <Name>JFDI.Utils.XSDExtractor</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -91,6 +85,12 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="TwoChildCollectionsNotRequiredConfigOneMember.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\XSDExtractor\JFDI.Utils.XSDExtractor.csproj">
+      <Project>{1fb9533e-1d23-4100-9beb-ba3092c3ddad}</Project>
+      <Name>JFDI.Utils.XSDExtractor</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
