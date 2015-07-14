@@ -50,12 +50,13 @@ namespace JFDI.Utils.XSDExtractor.Parsers
                 return;
 
             //   don't include these in the xsd
-            var attName = atts[0].Name.ToLower();
+            var firstAttribute = atts[0];
+            var attName = firstAttribute.Name.ToLower();
             if (attName.StartsWith("xmlns") || attName.StartsWith("xsi:"))
                 return;
 
             // avoid double entries
-            if (((XmlSchemaComplexType) type).Attributes.Cast<XmlSchemaObject>().Any(schemaAttrib => ((XmlSchemaAttribute) schemaAttrib).Name == atts[0].Name))
+            if (((XmlSchemaComplexType) type).Attributes.Cast<XmlSchemaObject>().Any(schemaAttrib => ((XmlSchemaAttribute) schemaAttrib).Name == firstAttribute.Name))
             {
                 return;
             }
@@ -99,15 +100,18 @@ namespace JFDI.Utils.XSDExtractor.Parsers
                     break;
             }
 
-            var attribute = XmlHelper.CreateAttribute(atts[0].Name);
+            var attribute = XmlHelper.CreateAttribute(firstAttribute.Name);
             attribute.SchemaType = AddRestriction(property, attributeType);
-            attribute.Use = atts[0].IsRequired ? XmlSchemaUse.Required : XmlSchemaUse.Optional;
+            attribute.Use = firstAttribute.IsRequired ? XmlSchemaUse.Required : XmlSchemaUse.Optional;
+
+            if (firstAttribute.DefaultValue != null && firstAttribute.DefaultValue.ToString() != "System.Object")
+                attribute.DefaultValue = firstAttribute.DefaultValue.ToString();
 
             var ct = (XmlSchemaComplexType) type;
             ct.Attributes.Add(attribute);
 
             //  add the documentation for this attribute
-            XmlHelper.AddAnnotation(attribute, property, atts[0]);
+            attribute.AddAnnotation(property, firstAttribute);
         }
 
         /// <summary>

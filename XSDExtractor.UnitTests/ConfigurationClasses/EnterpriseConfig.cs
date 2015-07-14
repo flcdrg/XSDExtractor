@@ -1,3 +1,4 @@
+using System;
 using System.Configuration;
 
 namespace JFDI.Utils.XSDExtractor.UnitTests.ConfigurationClasses
@@ -35,6 +36,13 @@ namespace JFDI.Utils.XSDExtractor.UnitTests.ConfigurationClasses
         {
             get { return (string) base["Name"]; }
         }
+
+        [ConfigurationProperty("Colour", DefaultValue = ConsoleColor.Red)]
+        public ConsoleColor ConsoleColor
+        {
+            get { return (ConsoleColor) this["Colour"]; }
+            set { this["Colour"] = value; }
+        }
     }
 
     [ConfigurationCollection(typeof(PersonConfig),
@@ -59,6 +67,16 @@ namespace JFDI.Utils.XSDExtractor.UnitTests.ConfigurationClasses
         public string Name
         {
             get { return (string) base["Name"]; }
+        }
+
+        /// <summary>
+        /// Department colour
+        /// </summary>
+        [ConfigurationProperty("Colour", DefaultValue = ConsoleColor.Blue)]
+        public ConsoleColor ConsoleColor
+        {
+            get { return (ConsoleColor)this["Colour"]; }
+            set { this["Colour"] = value; }
         }
 
         [ConfigurationProperty("Members",

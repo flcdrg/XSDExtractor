@@ -214,9 +214,8 @@ namespace JFDI.Utils.XSDExtractor.Parsers
             var propertyInfos = GetProperties<ConfigurationPropertyAttribute>(configCollAttribute.ItemType);
             foreach (var pi in propertyInfos)
             {
-                Debug.WriteLine("\tConfigurationProperty: " + pi.Name);
-
                 var parser = TypeParserFactory.GetParser(Generator, pi);
+                Debug.WriteLine("\tConfigurationProperty: {0} {1}", pi.Name, parser.GetType());
                 parser.GenerateSchemaTypeObjects(pi, ct, level + 1);
             }
         }
