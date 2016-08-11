@@ -154,7 +154,7 @@ namespace JFDI.Utils.XSDExtractor
                 standardDesc = configProperty.IsRequired ? "Required" : "Optional";
                 standardDesc += " " + fullName;
                 standardDesc += " " +
-                                (configProperty.DefaultValue.ToString() == "System.Object"
+                                (configProperty.DefaultValue == null || configProperty.DefaultValue.ToString() == "System.Object"
                                     ? string.Empty
                                     : "[" + configProperty.DefaultValue + "]");
             }
