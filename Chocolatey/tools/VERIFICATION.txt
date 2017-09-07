@@ -1,0 +1,10 @@
+﻿
+VERIFICATION
+Verification is intended to assist the Chocolatey moderators and community
+in verifying that this package's contents are trustworthy.
+
+Binaries are published to https://github.com/flcdrg/XSDExtractor/releases
+
+Locate the release that corresponds to the same version number as this Chocolatey package. This will link to the same 
+version of XSDExtractor.exe that is embedded in this package. You can download that file and calculate the checksum to verify
+that it is identical to the embedded file.

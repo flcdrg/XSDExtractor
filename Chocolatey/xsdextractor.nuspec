@@ -1,6 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <!-- Do not remove this test for UTF-8: if “Ω” doesn’t appear as greek uppercase omega letter enclosed in quotation marks, you should use an editor that supports UTF-8, not this one. -->
-
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
     <id>xsdextractor</id>
@@ -17,11 +16,34 @@
     <bugTrackerUrl>https://github.com/flcdrg/XSDExtractor/issues</bugTrackerUrl>
     <tags>XSD Schema</tags>
     <summary>Extract XSD from .NET ConfigurationSection classes</summary>
-    <description>XSDExtractor will attempt to extract an Xml Schema (XSD) from a compiled `ConfigurationSection` type. 
+    <description>XSDExtractor will attempt to extract an Xml Schema (XSD) from a compiled .NET assembly with `ConfigurationSection` types. 
 
-It does this by searching for `ConfigurationPropertyAttribute` and `ConfigurationCollectionAttribute` attributes. </description>
+It does this by searching for `ConfigurationPropertyAttribute` and `ConfigurationCollectionAttribute` attributes. 
+
+#### Usage
+
+`XSDExtractor [/R root] [/C class] [/A assembly] [/S bool] [/T uri] [/L bool] [/O path]`
+
+| Option     | Description |
+| ---        | --- |
+| `/R`       | Name of the Xsd root element |
+| `root`     | If ommited then the type name of the configurationsection is used instead. |
+| `/C`       | Name of the class which should be converted to an Xsd. If ommited then all classes are examined. |
+| `class`    | Full name (including namespace) of class |
+| `/A`       | Name of the assembly which should be examined. If ommited then all assemblies in the current directory are examined. |
+| `assembly` | Name of the assembly to inspect (path information is optional) |
+| `/S`       | Silence.|
+| `bool`     | If true then the user is not prompted at any point.|
+| `/T`       | Target namespace|
+| `string`   | Empty string or URI for target namespace|
+| `/L`       | All.|
+| `bool`     | If true then xsd:groups are created with 'all' instead of 'sequence'.|
+| `/O`       | Output path|
+| `string`   | Path to write files to|
+</description>
   </metadata>
   <files>
     <file src="tools\**" target="tools" />
+    <file src="..\XSDExtractor\bin\Release\XSDExtractor.exe" />
   </files>
 </package>
