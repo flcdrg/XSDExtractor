@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Do not remove this test for UTF-8: if “Ω” doesn’t appear as greek uppercase omega letter enclosed in quotation marks, you should use an editor that supports UTF-8, not this one. -->
+
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>xsdextractor</id>
+    <version>1.2</version>
+    <packageSourceUrl>https://github.com/flcdrg/XSDExtractor</packageSourceUrl>
+    <owners>flcdrg</owners>
+    <title>XSD Extractor</title>
+    <authors>Steve Ward, David Gardiner</authors>
+    <projectUrl>http://www.codeproject.com/Articles/15022/Extract-an-XML-Schema-from-a-NET-Configuration</projectUrl>
+    <copyright>2006 Steve Ward</copyright>
+    <licenseUrl>https://raw.githubusercontent.com/flcdrg/XSDExtractor/master/License</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <projectSourceUrl>https://github.com/flcdrg/XSDExtractor</projectSourceUrl>
+    <bugTrackerUrl>https://github.com/flcdrg/XSDExtractor/issues</bugTrackerUrl>
+    <tags>XSD Schema</tags>
+    <summary>Extract XSD from .NET ConfigurationSection classes</summary>
+    <description>XSDExtractor will attempt to extract an Xml Schema (XSD) from a compiled `ConfigurationSection` type. 
+
+It does this by searching for `ConfigurationPropertyAttribute` and `ConfigurationCollectionAttribute` attributes. </description>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>
